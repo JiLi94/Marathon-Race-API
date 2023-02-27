@@ -14,7 +14,6 @@ class Race(db.Model):
     filed_limit = db.Column(db.Integer(), nullable=False)
     start_line = db.Column(db.String(), nullable=False)
     finish_line = db.Column(db.String(), nullable=False)
-    age_limit = db.Column(db.Integer(), nullable=False)
     fee = db.Column(db.Float(), nullable=False)
     
     

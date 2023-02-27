@@ -2,6 +2,7 @@ from main import db
 from flask import Blueprint
 from main import bcrypt
 from models.participants import Participant
+from models.age_groups import Age_group
 from datetime import datetime
 
 db_commands = Blueprint('db', __name__)
@@ -28,6 +29,26 @@ def seed_db():
     )
     # add the instance as a new row into the table
     db.session.add(participant1)
+
+    # seed all age groups into db
+    age_groups =[
+        [18, 19],
+        [20, 39],
+        [40, 44],
+        [45, 49],
+        [50, 54],
+        [55, 59],
+        [60, 64],
+        [65, 69],
+        [70, 74],
+        [75, None]
+    ]
+    for i in age_groups:
+        group = Age_group()
+        group.age_group = i
+        db.session.add(group)
+
+    # commit changes
     db.session.commit()
     print('Table seeded')
 
