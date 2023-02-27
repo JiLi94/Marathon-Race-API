@@ -1,14 +1,17 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
+
+db = SQLAlchemy()
+
 def create_app():
     # Creating the flask app object
     app = Flask(__name__)
 
-    # configuring our app:
+    # configuring app:
     app.config.from_object("config.app_config")
-    
-    # creating our database object, This allows us to use ORM
-    db = SQLAlchemy(app)
+
+    # creating database object, This allows us to use ORM
+    db.init_app(app)
 
     return app
