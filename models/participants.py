@@ -10,6 +10,7 @@ class Participant(db.Model):
     last_name = db.Column(db.String(), nullable=False)
     email = db.Column(db.String(), nullable=False)
     mobile = db.Column(db.String(), nullable=False)
-    date_of_birth = db.column(db.Date(), nullable=False)
+    password = db.Column(db.String(), nullable=False)
+    date_of_birth = db.Column(db.Date(), nullable=False)
     gender = db.Column(db.String(), nullable=False)
     admin = db.Column(db.Boolean(), nullable=False)
