@@ -4,7 +4,7 @@ class Registration(db.Model):
     # define table name
     __tablename__ = 'registrations'
     # define primary key
-    id = db.Column(db.Integer(), nullable=False)
+    id = db.Column(db.Integer(), primary_key=True)
     # add foreign keys
     participant_id = db.Column(db.Integer(), db.ForeignKey('participants.id'), nullable=False)
     race_id = db.Column(db.Integer(), db.ForeignKey('races.id'), nullable=False)

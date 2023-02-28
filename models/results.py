@@ -13,7 +13,7 @@ class Result(db.Model):
     start_at = db.Column(db.DateTime(), nullable=False)
     finish_at = db.Column(db.DateTime(), nullable=False)
     # time used to finish the race
-    finish_time = db.Column(db.DateTime(), nullable=False)
+    finish_time = db.Column(db.Time(), nullable=False)
     # average pace per km
-    pace = db.Column(db.Datetime(), nullable=False)
+    pace = db.Column(db.Time(), nullable=False)
 
