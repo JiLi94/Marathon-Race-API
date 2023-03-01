@@ -28,7 +28,7 @@ def seed_db():
         mobile = '1234567890',
         password = bcrypt.generate_password_hash('password12345678').decode('utf-8'),
         date_of_birth = datetime.strptime('1984-11-05', '%Y-%m-%d'),
-        gender = 'Male',
+        gender = 'male',
         admin = False
     )
     # add the instance as a new row into the table

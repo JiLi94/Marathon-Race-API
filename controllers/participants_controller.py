@@ -3,6 +3,10 @@ from sqlalchemy import or_
 from main import db, bcrypt
 from models.participants import Participant
 from schemas.participant_schema import participant_schema, participants_schema
+from email_validator import validate_email, EmailNotValidError
+from phonenumbers import parse, is_valid_number
+from password_strength import PasswordPolicy 
+from datetime import datetime
 
 participants = Blueprint('participants', __name__, url_prefix='/participants')
 
@@ -24,17 +28,56 @@ def get_participants():
 def register_participant():
     # import request
     participant_fields = participant_schema.load(request.json)
+
     # check if user is already registered, check both email and mobile
     participant = Participant.query.filter(or_(
         Participant.email == participant_fields['email'], Participant.mobile == participant_fields['mobile'])).first()
-    # participant = Participant.query.filter_by(email=participant_fields['email']).first()
     # if participant is already registered, return error message
     if participant:
         return abort(400, description='Participant already registered')
-    # otherwise, create participant object
+
+    # validate name
+    if not(participant_fields['first_name'].isalpha() and participant_fields['last_name'].isalpha()):
+        return abort(400, description='Please enter valid first and last name')
+
+    # validate email
+    try:
+        email = validate_email(participant_fields['email'])
+    except EmailNotValidError:
+        return abort(400, description='Please enter a valid email address')
+
+    # validate mobile number
+    try:
+        mobile = parse(participant_fields['mobile'], 'AU')
+        if not is_valid_number(mobile):
+            return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
+    except:
+        return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
+    
+    # validate password
+    password_policy = PasswordPolicy.from_names(
+        length = 8, # minimum length 8
+        uppercase = 1, # minimum 1 uppercase letter
+    )
+    if password_policy.test(participant_fields['password']):
+        return abort(400, description='The password must be at least 8 letters long and have at least 1 uppercase letter')
+
+    # validate date of birth format
+    try:
+        dob = datetime.strptime(participant_fields['date_of_birth'], '%Y-%m-%d').date()
+    except ValueError:
+        return abort(400, description='Please enter a valid date for date_of_birth in the format of yyyy-MM-dd')
+
+    # validate gender format
+    if participant_fields['gender'].lower() not in ['male', 'female']:
+        return abort(400, description='Please select male or female for gender') 
+
+    # if all good, create participant object
     participant = Participant(**participant_fields)
     participant.password = bcrypt.generate_password_hash(
         participant_fields['password']).decode('utf-8')
+    participant.gender = participant_fields['gender'].lower()
+
     # add to the database
     db.session.add(participant)
     db.session.commit()
