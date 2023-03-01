@@ -11,10 +11,11 @@ from datetime import datetime, timedelta
 db_commands = Blueprint('db', __name__)
 
 # create app's cli command named create, then run it in the terminal as "flask db create"
-@db_commands.cli.command('create')
-def create_db():
+@db_commands.cli.command('init')
+def init_db():
+    db.drop_all()
     db.create_all()
-    print('Tables created successfully')
+    print('Tables are dropped and recreated')
 
 @db_commands.cli.command('seed')
 def seed_db():
@@ -96,8 +97,3 @@ def seed_db():
     db.session.commit()
 
     print('Table seeded')
-
-@db_commands.cli.command('drop')
-def drop_db():
-    db.drop_all()
-    print('Tables dropped')

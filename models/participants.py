@@ -13,4 +13,4 @@ class Participant(db.Model):
     password = db.Column(db.String(), nullable=False)
     date_of_birth = db.Column(db.Date(), nullable=False)
     gender = db.Column(db.String(), nullable=False)
-    admin = db.Column(db.Boolean(), nullable=False)
+    admin = db.Column(db.Boolean(), nullable=False, default=False)
