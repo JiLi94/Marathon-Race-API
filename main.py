@@ -2,11 +2,13 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_marshmallow import Marshmallow
+from flask_jwt_extended import JWTManager
 
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 ma = Marshmallow()
+jwt = JWTManager()
 
 def create_app():
     # Creating the flask app object
@@ -23,6 +25,9 @@ def create_app():
 
     # creating marshmallow object, this allows us to use schema
     ma.init_app(app)
+
+    # creating JWT object, which allows us to use authentication
+    jwt.init_app(app)
 
     # import controllers and activate blueprints
     from controllers import registrable_controllers
