@@ -11,6 +11,51 @@ from flask_jwt_extended import create_access_token, jwt_required
 
 participants = Blueprint('participants', __name__, url_prefix='/participants')
 
+# define a decorator to validate format of user details, such as name and email format
+def validate_input(func):
+    def wrapper():
+        participant_fields = participant_schema.load(request.json)
+        # validate name
+        if not (participant_fields['first_name'].isalpha() and participant_fields['last_name'].isalpha()):
+            return abort(400, description='Please enter valid first and last name')
+        
+        # validate email
+        try:
+            email = validate_email(participant_fields['email'])
+        except EmailNotValidError:
+            return abort(400, description='Please enter a valid email address')
+
+        # validate mobile number
+        try:
+            mobile = parse(participant_fields['mobile'], 'AU')
+            if not is_valid_number(mobile):
+                return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
+        except:
+            return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
+
+        # validate password
+        password_policy = PasswordPolicy.from_names(
+            length=8,  # minimum length 8
+            uppercase=1,  # minimum 1 uppercase letter
+        )
+        if password_policy.test(participant_fields['password']):
+            return abort(400, description='The password must be at least 8 letters long and have at least 1 uppercase letter')
+
+        # validate date of birth format
+        try:
+            dob = datetime.strptime(
+                participant_fields['date_of_birth'], '%Y-%m-%d').date()
+        except ValueError:
+            return abort(400, description='Please enter a valid date for date_of_birth in the format of yyyy-MM-dd')
+
+        # validate gender format
+        if participant_fields['gender'].lower() not in ['male', 'female']:
+            return abort(400, description='Please select male or female for gender')
+            
+        return func()
+ 
+    return wrapper
+
 
 # get all participants from the database
 @participants.route('/', methods=['GET'])
@@ -25,6 +70,7 @@ def get_participants():
 
 # register a new participant
 @participants.route('/register', methods=['POST'])
+@validate_input
 def register_participant():
     # import request
     participant_fields = participant_schema.load(request.json)
@@ -35,43 +81,6 @@ def register_participant():
     # if participant is already registered, return error message
     if participant:
         return abort(400, description='Participant already registered')
-
-    # validate name
-    if not (participant_fields['first_name'].isalpha() and participant_fields['last_name'].isalpha()):
-        return abort(400, description='Please enter valid first and last name')
-
-    # validate email
-    try:
-        email = validate_email(participant_fields['email'])
-    except EmailNotValidError:
-        return abort(400, description='Please enter a valid email address')
-
-    # validate mobile number
-    try:
-        mobile = parse(participant_fields['mobile'], 'AU')
-        if not is_valid_number(mobile):
-            return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
-    except:
-        return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
-
-    # validate password
-    password_policy = PasswordPolicy.from_names(
-        length=8,  # minimum length 8
-        uppercase=1,  # minimum 1 uppercase letter
-    )
-    if password_policy.test(participant_fields['password']):
-        return abort(400, description='The password must be at least 8 letters long and have at least 1 uppercase letter')
-
-    # validate date of birth format
-    try:
-        dob = datetime.strptime(
-            participant_fields['date_of_birth'], '%Y-%m-%d').date()
-    except ValueError:
-        return abort(400, description='Please enter a valid date for date_of_birth in the format of yyyy-MM-dd')
-
-    # validate gender format
-    if participant_fields['gender'].lower() not in ['male', 'female']:
-        return abort(400, description='Please select male or female for gender')
 
     # if all good, create participant object
     participant = Participant(**participant_fields)
@@ -110,6 +119,6 @@ def login():
 
 
 # update details
-@participants.route('/update', methods=['PUT'])
-@jwt_required
-def update_details():
+# @participants.route('/update', methods=['PUT'])
+# @jwt_required
+# def update_details():
