@@ -7,3 +7,8 @@ class Age_group(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     # add other column
     age_group = db.Column(db.String(), nullable=False)
+    registrations = db.relationship(
+        'Registration',
+        backref = 'age_group',
+        cascade = 'all, delete'
+    )

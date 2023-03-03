@@ -15,5 +15,9 @@ class Race(db.Model):
     start_line = db.Column(db.String(), nullable=False)
     finish_line = db.Column(db.String(), nullable=False)
     fee = db.Column(db.String(), nullable=False)
-    
+    registrations = db.relationship(
+        'Registration',
+        backref = 'race',
+        cascade = 'all, delete'
+    )
     

@@ -14,3 +14,8 @@ class Participant(db.Model):
     date_of_birth = db.Column(db.Date(), nullable=False)
     gender = db.Column(db.String(), nullable=False)
     admin = db.Column(db.Boolean(), nullable=False, default=False)
+    registrations = db.relationship(
+        'Registration',
+        backref = 'participant',
+        cascade = 'all, delete'
+    )

@@ -129,3 +129,15 @@ def login():
 # @participants.route('/update', methods=['PUT'])
 # @jwt_required
 # def update_details():
+
+
+# a route to view races under one participant
+@participants.route('/<int:participant_id>', methods = ['GET'])
+# @jwt_required
+def get_races_participant(participant_id):
+    # query all registrations under the participant from the database
+    registrations_list = Registration.query.filter_by(participant_id=participant_id).all()
+    # convert to json format
+    result = registrations_schema.dump(registrations_list)
+    # return the result
+    return jsonify(result)

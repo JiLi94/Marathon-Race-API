@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, abort
 from main import db, bcrypt, jwt
 from models.races import Race
-from schemas.race_schemas import race_schema, races_schema
+from schemas.race_schema import race_schema, races_schema
 from datetime import datetime, timedelta
 
 races = Blueprint('races', __name__, url_prefix='/races')
