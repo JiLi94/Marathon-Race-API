@@ -62,7 +62,7 @@ def seed_db():
         filed_limit = 8500,
         start_line = 'Batman Avenue (150m North of Rod Laver Arena)',
         finish_line = 'Melbourne Cricket Ground (MCG)',
-        fee = 160 
+        fee = '160.00' 
     )
     db.session.add(race1)
     # commit changes before creating instance for registration, because it has foreign keys of previous tables

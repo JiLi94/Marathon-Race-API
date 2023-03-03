@@ -57,7 +57,7 @@ def validate_input(func):
     return wrapper
 
 
-# get all participants from the database
+# get all participants from the database, admin only
 @participants.route('/', methods=['GET'])
 def get_participants():
     # query all participants from the database
@@ -91,7 +91,8 @@ def register_participant():
     # add to the database
     db.session.add(participant)
     db.session.commit()
-    # create a variable to store expiration time
+
+    # create a variable to store token expiration time
     expiry = timedelta(hours=1)
     #create access token
     access_token = create_access_token(identity = str(participant.id), expires_delta=expiry)
@@ -104,13 +105,19 @@ def register_participant():
 def login():
     # get data from the request
     participant_fields = participant_schema.load(request.json)
-    # find the user in the database
-    participant = Participant.query.filter_by(email = participant_fields['email']).first()
+
+    # find the user in the database based on email or mobile
+    if 'email' in participant_fields:
+        participant = Participant.query.filter_by(email = participant_fields['email']).first()
+    elif 'mobile' in participant_fields:
+        participant = Participant.query.filter_by(mobile = participant_fields['mobile']).first()
+    else:
+        return abort(401, description="Please enter email address or mobile to login")
     # if user is not found or password is incorrect
     if not participant or not bcrypt.check_password_hash(participant.password, participant_fields['password']):
         return abort(401, description="Incorrect login detail")
     
-    # create a variable to store expiration time
+    # create a variable to store token expiration time
     expiry = timedelta(hours=1)
     #create access token
     access_token = create_access_token(identity = str(participant.id), expires_delta=expiry)
