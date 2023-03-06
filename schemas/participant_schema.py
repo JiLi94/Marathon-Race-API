@@ -7,7 +7,7 @@ class ParticipantSchema(ma.Schema):
     class Meta:
         # fields to output
         fields = ('id', 'first_name', 'last_name', 'email', 'mobile',
-                  'password', 'date_of_birth', 'gender')
+                  'password', 'date_of_birth', 'gender', 'admin')
         # make sure output is ordered as the same the order in the fields
         ordered = True
     # registrations = fields.Nested('RegistrationSchema')
