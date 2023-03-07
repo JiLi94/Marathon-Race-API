@@ -2,7 +2,9 @@ from flask import Blueprint, jsonify, request, abort
 from sqlalchemy import or_
 from main import db, bcrypt, jwt
 from models.participants import Participant
+from models.registrations import Registration
 from schemas.participant_schema import participant_schema, participants_schema
+from schemas.registration_schema import registrations_schema
 from email_validator import validate_email, EmailNotValidError
 from phonenumbers import parse, is_valid_number
 from password_strength import PasswordPolicy
@@ -16,13 +18,13 @@ participants = Blueprint('participants', __name__, url_prefix='/participants')
 # also to valid if the user has input enough information
 
 
-def validate_input(*args):
+def validate_input(required_fields=[]):
     def decorator(func):
         @wraps(func)
-        def wrapper():
+        def wrapper(*args, **kwargs):
             participant_fields = participant_schema.load(request.json)
             # check if the user input enough information
-            for arg in args:
+            for arg in required_fields:
                 if arg not in participant_fields:
                     return abort(400, description='Not enough information provided')
             # validate name
@@ -73,7 +75,7 @@ def validate_input(*args):
                 if not isinstance(participant_fields['admin'], bool):
                     return abort(400, description='Please select True or False for admin')
 
-            return func()
+            return func(*args, **kwargs)
         return wrapper
     return decorator
 
@@ -90,20 +92,27 @@ def validate_input(*args):
 # get all participants from the database, admin only
 
 
-@participants.route('/', methods=['GET'])
+@participants.route('/all', methods=['GET'])
+@jwt_required()
 def get_participants():
-    # query all participants from the database
-    participants_list = Participant.query.all()
-    # convert the data into a JSON format
-    result = participants_schema.dump(participants_list)
-    # return the data in JSON format
-    return jsonify(result)
+    id = get_jwt_identity()
+    user = Participant.query.get(id)
+    # check if user is admin
+    if user.admin:
+        # query all participants from the database
+        participants_list = Participant.query.all()
+        # convert the data into a JSON format
+        result = participants_schema.dump(participants_list)
+        # return the data in JSON format
+        return jsonify(result)
+    # if not admin, return error message
+    return abort(401, description='Invalid User')
 
 
 # register a new participant
 @participants.route('/register', methods=['POST'])
 # validate input
-@validate_input('first_name', 'last_name', 'email', 'mobile', 'password', 'date_of_birth', 'gender')
+@validate_input(['first_name', 'last_name', 'email', 'mobile', 'password', 'date_of_birth', 'gender'])
 def register_participant():
     # import request
     participant_fields = participant_schema.load(request.json)
@@ -158,20 +167,40 @@ def login():
     # create access token
     access_token = create_access_token(
         identity=str(participant.id), expires_delta=expiry)
+
     # return the user email and access token
     return jsonify({'User': participant.email, 'token': access_token})
 
 
+# check personal details
+@participants.route('/<int:participant_id>', methods=['GET'])
+@jwt_required()
+def check_personal_details(participant_id):
+    # access identity of current participant
+    id = get_jwt_identity()
+    participant = Participant.query.get(id)
+    # if user is trying to access their own details, or the user is admin, allow access
+    if int(id) == participant_id or participant.admin:
+        result = participant_schema.dump(participant)
+        return jsonify(result)
+    # otherwise, the participant is not allowed to check other people's details
+    return abort(401, description='Invalid User')
+
+
 # update details
-@participants.route('/update', methods=['PUT'])
+@participants.route('/<int:participant_id>', methods=['PUT'])
 @jwt_required()
 @validate_input()
-def update_personal_details():
+def update_personal_details(participant_id):
     # get user input
     input_fields = participant_schema.load(request.json)
     # access identity of current participant
     id = get_jwt_identity()
     participant = Participant.query.get(id)
+    # if a non-admin user is trying to update other participants' details, return error
+    if not (int(id) == participant_id or participant.admin):
+        return abort(401, description='Invalid User')
+
     # check if it's a valid participant, if not, return error
     if not participant:
         return abort(404, description='Participant not found')
@@ -183,11 +212,12 @@ def update_personal_details():
     if (other_participant is not None) and (other_participant.id != int(id)):
         return abort(400, description='Email or mobile already registered by another participant')
 
+    # update fields
     for key, value in input_fields.items():
-        # cannot update primary key id
+        # not allowed to update primary key id
         if key == 'id':
             continue
-        # if user is admin, can update the 'admin' field
+        # if user is admin, allow to update the 'admin' field
         elif key == 'admin':
             if participant.admin:
                 participant.admin = value
@@ -197,20 +227,27 @@ def update_personal_details():
         # update other attributes
         elif getattr(participant, key) is not None and getattr(participant, key) != value:
             setattr(participant, key, value)
-    # participant.first_name = input_fields['first_name']
+
     db.session.commit()
     # # convert to json format
     result = participant_schema.dump(participant)
-    return jsonify(msg='Updated successfully', Updated = result)
+    return jsonify(msg='Updated successfully', Updated=result)
 
 
 # a route to view races under one participant
-# @participants.route('/<int:participant_id>', methods = ['GET'])
-# # @jwt_required
-# def get_races_participant(participant_id):
-#     # query all registrations under the participant from the database
-#     registrations_list = Registration.query.filter_by(participant_id=participant_id).all()
-#     # convert to json format
-#     result = registrations_schema.dump(registrations_list)
-#     # return the result
-#     return jsonify(result)
+@participants.route('/<int:participant_id>/registrations', methods=['GET'])
+@jwt_required()
+def get_races_participant(participant_id):
+    id = get_jwt_identity()
+    participant = Participant.query.get(id)
+    # only allow to check the registration if the participant is trying to check their own registration or the user is admin
+    if int(id) == participant_id or participant.admin:
+        # query all registrations under the participant from the database
+        registrations_list = Registration.query.filter_by(
+            participant_id=participant_id).all()
+        # convert to json format
+        result = registrations_schema.dump(registrations_list)
+        # return the result
+        return jsonify(result)
+    # otherwise, the participant is not allowed to check other people's registrations
+    return abort(401, description='Invalid User')

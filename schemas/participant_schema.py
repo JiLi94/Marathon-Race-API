@@ -8,6 +8,7 @@ class ParticipantSchema(ma.Schema):
         # fields to output
         fields = ('id', 'first_name', 'last_name', 'email', 'mobile',
                   'password', 'date_of_birth', 'gender', 'admin')
+        load_only = ['password', 'admin']
         # make sure output is ordered as the same the order in the fields
         ordered = True
     # registrations = fields.Nested('RegistrationSchema')
