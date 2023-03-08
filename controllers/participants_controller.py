@@ -127,6 +127,10 @@ def register_participant():
     if participant:
         return abort(400, description='Participant already registered')
 
+    # not allow to register the id, id should be given by the system
+    if 'id' in participant_fields:
+        participant_fields.pop('id') 
+
     # if all good, create participant object
     participant = Participant(**participant_fields)
     participant.password = bcrypt.generate_password_hash(
@@ -200,13 +204,13 @@ def update_personal_details(participant_id):
     # access identity of current participant
     id = get_jwt_identity()
     participant = Participant.query.get(id)
-    # if a non-admin user is trying to update other participants' details, return error
-    if not (int(id) == participant_id or participant.admin):
-        return abort(401, description='Invalid User')
-
     # check if it's a valid participant, if not, return error
     if not participant:
         return abort(404, description='Participant not found')
+    
+    # if a non-admin user is trying to update other participants' details, return error
+    if not (int(id) == participant_id or participant.admin):
+        return abort(401, description='Invalid User')
 
     # check if email or mobile is used by other participants
     other_participant = Participant.query.filter(or_(
@@ -243,6 +247,9 @@ def update_personal_details(participant_id):
 def get_races_participant(participant_id):
     id = get_jwt_identity()
     participant = Participant.query.get(id)
+    # check if it's a valid participant, if not, return error
+    if not participant:
+        return abort(404, description='Participant not found')
     # only allow to check the registration if the participant is trying to check their own registration or the user is admin
     if int(id) == participant_id or participant.admin:
         # query all registrations under the participant from the database
