@@ -26,7 +26,7 @@ def seed_db():
         last_name = 'Kipchoge',
         email = 'test@test.com',
         mobile = '1234567890',
-        password = bcrypt.generate_password_hash('password12345678').decode('utf-8'),
+        password = bcrypt.generate_password_hash('Password12345678').decode('utf-8'),
         date_of_birth = datetime.strptime('1984-11-05', '%Y-%m-%d'),
         gender = 'male',
         admin = False
@@ -57,9 +57,9 @@ def seed_db():
         name = 'Berlin Marathon',
         distance = 42.195,
         date = datetime.strptime('2022-09-25', '%Y-%m-%d'),
-        start_time = datetime.strptime('2022-09-25 07:00:00', '%Y-%m-%d %H:%M:%S'),
-        cut_off_time = datetime.strptime('2022-09-25 14:00:00', '%Y-%m-%d %H:%M:%S'),
-        filed_limit = 8500,
+        start_time = datetime.strptime('07:00:00', '%H:%M:%S'),
+        cut_off_time = datetime.strptime('14:00:00', '%H:%M:%S'),
+        field_limit = 8500,
         start_line = 'Batman Avenue (150m North of Rod Laver Arena)',
         finish_line = 'Melbourne Cricket Ground (MCG)',
         fee = '160.00' 
@@ -87,9 +87,9 @@ def seed_db():
         finished = True,
         registration_id = registration1.id,
         # start_at should be larger than race start time
-        start_at = race1.start_time,
+        start_at = datetime.strptime('07:00:00', '%H:%M:%S'),
         # if finished, finish_at should be smaller than race cut_off time
-        finish_at = race1.cut_off_time,
+        finish_at = datetime.strptime('08:00:00', '%H:%M:%S'),
     )
     result1.finish_time = result1.finish_at - result1.start_at
     result1.pace = timedelta(seconds = result1.finish_time.total_seconds()/race1.distance)

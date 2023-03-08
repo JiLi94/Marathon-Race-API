@@ -16,8 +16,6 @@ participants = Blueprint('participants', __name__, url_prefix='/participants')
 
 # define a decorator to validate format of user details, such as name and email format
 # also to valid if the user has input enough information
-
-
 def validate_input(required_fields=[]):
     def decorator(func):
         @wraps(func)
@@ -27,10 +25,15 @@ def validate_input(required_fields=[]):
             for arg in required_fields:
                 if arg not in participant_fields:
                     return abort(400, description='Not enough information provided')
-            # validate name
-            if 'first_name' in participant_fields and 'last_name' in participant_fields:
-                if not (participant_fields['first_name'].isalpha() and participant_fields['last_name'].isalpha()):
-                    return abort(400, description='Please enter valid first and last name')
+            # validate first name
+            if 'first_name' in participant_fields:
+                if not participant_fields['first_name'].isalpha():
+                    return abort(400, description='Please enter valid first name')
+
+            # validate last name
+            if 'last_name' in participant_fields:
+                if not  participant_fields['last_name'].isalpha():
+                    return abort(400, description='Please enter valid last name')
 
             # validate email
             try:
@@ -61,7 +64,7 @@ def validate_input(required_fields=[]):
             try:
                 if 'date_of_birth' in participant_fields:
                     dob = datetime.strptime(
-                        participant_fields['date_of_birth'], '%Y-%m-%d').date()
+                        participant_fields['date_of_birth'], '%Y-%m-%d')
             except ValueError:
                 return abort(400, description='Please enter a valid date for date_of_birth in the format of yyyy-MM-dd')
 

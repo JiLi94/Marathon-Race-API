@@ -10,8 +10,8 @@ class Result(db.Model):
     # add other columns
     finished = db.Column(db.Boolean(), nullable=False)
     # the timestamp when started and finished
-    start_at = db.Column(db.DateTime(), nullable=False)
-    finish_at = db.Column(db.DateTime(), nullable=False)
+    start_at = db.Column(db.Time(), nullable=False)
+    finish_at = db.Column(db.Time(), nullable=False)
     # time used to finish the race
     finish_time = db.Column(db.Time(), nullable=False)
     # average pace per km

@@ -22,3 +22,7 @@ def get_races():
 
 
 # a route to view all participants under a race
+
+# register 
+# need to check if the participant is already registered, can automatically assign gender and age group
+# check if field limit is exceeded
