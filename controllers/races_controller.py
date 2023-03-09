@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, abort
 from main import db, bcrypt, jwt
 from models.races import Race
 from models.participants import Participant
+from controllers.participants_controller import is_admin
 from schemas.race_schema import race_schema, races_schema
 from datetime import datetime, timedelta
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -11,8 +12,6 @@ from sqlalchemy import text
 races = Blueprint('races', __name__, url_prefix='/races')
 
 # a decorator to handle data validation
-
-
 def validate_input(required_fields=[]):
     def decorator(func):
         @wraps(func)
@@ -54,9 +53,7 @@ def validate_input(required_fields=[]):
     return decorator
 
 # a route to view all races
-
-
-@races.route('/', methods=['GET'])
+@races.route('/all', methods=['GET'])
 def get_races():
     # query all races from the database
     races_list = Race.query.all()
@@ -64,8 +61,6 @@ def get_races():
     return jsonify(races_schema.dump(races_list))
 
 # a route to check one single race
-
-
 @races.route('/<int:id>', methods=['GET'])
 def get_race(id):
     # query race from the database
@@ -74,20 +69,17 @@ def get_race(id):
     return jsonify(race_schema.dump(race))
 
 # a route to add a race (admin only)
-
-
 @races.route('/add', methods=['POST'])
 @jwt_required()
+@is_admin
 @validate_input(['name', 'distance', 'date', 'start_time', 'cut_off_time', 'field_limit', 'start_line', 'finish_line', 'fee'])
 def add_race():
     # get id of the user
-    id = get_jwt_identity()
-    participant = Participant.query.get(id)
-    if not participant:
-        return abort(401, description='Invalid User')
-    # if not admin, return error message
-    if not participant.admin:
-        return abort(401, description='Invalid User')
+    # id = get_jwt_identity()
+    # participant = Participant.query.get(id)
+    # # if user not exists or not admin, return error
+    # if not participant or not participant.admin:
+    #     return abort(401, description='Invalid User')
     # if user is admin, allow to add race
     # get data from the request
     race_fields = race_schema.load(request.json)
@@ -112,22 +104,21 @@ def add_race():
 
 
 # a route to update a race (admin only)
-@races.route('/<int:id>', methods=['PUT'])
+@races.route('/<int:race_id>', methods=['PUT'])
 @validate_input()
 @jwt_required()
-def update_race(id):
+@is_admin
+def update_race(race_id):
     # get user input
     input_fields = race_schema.load(request.json)
-    race = Race.query.get(id)
+    race = Race.query.get(race_id)
     # access identity of current participant
-    id = get_jwt_identity()
-    participant = Participant.query.get(id)
+    # id = get_jwt_identity()
+    # participant = Participant.query.get(id)
     
-    if not participant:
-        return abort(401, description='Invalid User')
-
-    if not participant.admin:
-        return abort(401, description='Invalid User')
+    # # if user not exists or not admin, return error
+    # if not participant or not participant.admin:
+    #     return abort(401, description='Invalid User')
 
     # update fields
     for key, value in input_fields.items():

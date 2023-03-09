@@ -4,7 +4,6 @@ from flask_bcrypt import Bcrypt
 from flask_marshmallow import Marshmallow
 from flask_jwt_extended import JWTManager
 
-
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 ma = Marshmallow()
@@ -39,3 +38,4 @@ def create_app():
     app.register_blueprint(db_commands)
 
     return app
+

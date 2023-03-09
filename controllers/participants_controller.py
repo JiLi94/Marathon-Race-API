@@ -82,17 +82,19 @@ def validate_input(required_fields=[]):
         return wrapper
     return decorator
 
-# def check_existing_user():
-#     def wrapper():
-#         participant_fields = participant_schema.load(request.json)
-#         # check if user is already registered, check both email and mobile
-#         participant = Participant.query.filter(or_(
-#             Participant.email == participant_fields['email'], Participant.mobile == participant_fields['mobile'])).first()
-#         # if participant is already registered, return error message
-#         if participant:
-#             return abort(400, description='Email or mobile already registered')
 
-# get all participants from the database, admin only
+# a decorator to check if user is admin
+def is_admin(func):
+    @wraps(func)
+    # @jwt_required()
+    def wrapper(*args, **kwargs):
+        id = get_jwt_identity()
+        participant = Participant.query.get(id)
+        if not participant or not participant.admin:
+            return abort(401, description='Invalid User')
+
+        return func(*args, **kwargs)
+    return wrapper
 
 
 @participants.route('/all', methods=['GET'])
@@ -204,12 +206,9 @@ def update_personal_details(participant_id):
     # access identity of current participant
     id = get_jwt_identity()
     participant = Participant.query.get(id)
-    # check if it's a valid participant, if not, return error
-    if not participant:
-        return abort(404, description='Participant not found')
     
-    # if a non-admin user is trying to update other participants' details, return error
-    if not (int(id) == participant_id or participant.admin):
+    # if the user doesn't exist, or a non-admin user is trying to update other participants' details, return error
+    if not participant or (int(id) != participant_id and not participant.admin):
         return abort(401, description='Invalid User')
 
     # check if email or mobile is used by other participants
