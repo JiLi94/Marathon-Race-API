@@ -12,9 +12,7 @@ from validator import validate_input, is_admin
 races = Blueprint('races', __name__, url_prefix='/races')
 
 # a route to view all races
-
-
-@races.route('/all', methods=['GET'])
+@races.route('/', methods=['GET'])
 def get_races():
     # query all races from the database
     races_list = Race.query.all()
@@ -22,8 +20,6 @@ def get_races():
     return jsonify(races_schema.dump(races_list))
 
 # a route to check one single race
-
-
 @races.route('/<int:id>', methods=['GET'])
 def get_race(id):
     # query race from the database
@@ -32,10 +28,7 @@ def get_race(id):
     return jsonify(race_schema.dump(race))
 
 # a route to add a race (admin only)
-
-
-@races.route('/add', methods=['POST'])
-@jwt_required()
+@races.route('/', methods=['POST'])
 @is_admin
 @validate_input(race_schema, ['name', 'distance', 'date', 'start_time', 'cut_off_time', 'field_limit', 'start_line', 'finish_line', 'fee'])
 def add_race():
@@ -62,7 +55,6 @@ def add_race():
 # a route to update a race (admin only)
 @races.route('/<int:race_id>', methods=['PUT'])
 @validate_input(race_schema)
-@jwt_required()
 @is_admin
 def update_race(race_id):
     # get user input

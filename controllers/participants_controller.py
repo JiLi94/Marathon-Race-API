@@ -13,7 +13,6 @@ from validator import Validator, validate_input, is_admin
 participants = Blueprint('participants', __name__, url_prefix='/participants')
 
 @participants.route('/all', methods=['GET'])
-@jwt_required()
 @is_admin
 def get_participants():
     # query all participants from the database

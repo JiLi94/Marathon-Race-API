@@ -13,17 +13,19 @@ class Validator():
         self.data = data
 
     # def a function to validate number
-    def validate_number(self, field, min, max):
+    def validate_number(self, field, min, max=None):
         try:
-            if float(self.data[field]) < min or float(self.data[field]) > max:
-                return abort(400, description=f'Please enter a valid number for {field} between {min} and {max}')
+            if (min is not None and float(self.data[field]) < min) or (max is not None and float(self.data[field]) > max):
+                return abort(400, description=f'Please enter a valid number for {field} between [{min}, {max}]')
         except ValueError:
-            return abort(400, description=f'Please enter a valid number for {field} between {min} and {max}')
+            return abort(400, description=f'Please enter a valid number for {field} between [{min}, {max}]')
 
     # def a function to validate date or time input
     def validate_datetime(self, field, datetime_format):
         try:
             date_time = datetime.strptime(self.data[field], datetime_format)
+            if field == 'date_of_birth' and date_time > date_time.now():
+                return abort(400, description=f'Please enter a valid date for {field} in the format of {datetime_format}')
         except ValueError:
             return abort(400, description=f'Please enter a valid date for {field} in the format of {datetime_format}')
     
@@ -92,7 +94,7 @@ def validate_input(schema, required_fields=[]):
             validator = Validator(input_fields)
             for field in input_fields:
                 match field:
-                    case 'name' |'start_line' | 'finish_line':
+                    case 'name' |'start_line' | 'finish_line' |'bib_number':
                         validator.validate_string(field)
                     case 'first_name' | 'last_name':
                         validator.validate_name(field)
@@ -102,18 +104,14 @@ def validate_input(schema, required_fields=[]):
                         validator.validate_mobile()
                     case 'password':
                         validator.validate_password()
-                    case 'date_of_birth'|'date':
+                    case 'date_of_birth'|'date'|'registration_date':
                         validator.validate_datetime(field, '%Y-%m-%d')
                     case 'gender':
                         validator.validate_gender()
                     case 'admin':
                         validator.validate_admin(field)
-                    case 'distance':
-                        validator.validate_number(field, 3, 100)
-                    case 'field_limit':
-                        validator.validate_number(field, 1, 10000)
-                    case 'fee':
-                        validator.validate_number(field, 0, 1000) 
+                    case 'distance'| 'fee' | 'field_limit' | 'participant_id' | 'race_id':
+                        validator.validate_number(field, 0)
                     case 'start_time'|'end_time':
                         validator.validate_datetime(field, '%H:%M:%S')
 
@@ -123,7 +121,7 @@ def validate_input(schema, required_fields=[]):
 
 def is_admin(func):
     @wraps(func)
-    # @jwt_required()
+    @jwt_required()
     def wrapper(*args, **kwargs):
         id = get_jwt_identity()
         participant = Participant.query.get(id)

@@ -4,7 +4,7 @@ from main import ma
 class AgeGroupSchema(ma.Schema):
     class Meta:
         # fields to output
-        fields = ('id','age_group')
+        fields = ('id','min_age','max_age')
         # make sure output is ordered as the order in the fields
         ordered = True
 

@@ -36,6 +36,7 @@ def seed_db():
 
     # seed all age groups into db
     age_groups =[
+        [0, 17],
         [18, 19],
         [20, 39],
         [40, 44],
@@ -49,7 +50,8 @@ def seed_db():
     ]
     for i in age_groups:
         group = Age_group()
-        group.age_group = i
+        group.min_age = i[0]
+        group.max_age = i[1]
         db.session.add(group)
 
     # create one race instance
@@ -62,7 +64,7 @@ def seed_db():
         field_limit = 8500,
         start_line = 'Batman Avenue (150m North of Rod Laver Arena)',
         finish_line = 'Melbourne Cricket Ground (MCG)',
-        fee = '160.00' 
+        fee = 160.00
     )
     db.session.add(race1)
     # commit changes before creating instance for registration, because it has foreign keys of previous tables
@@ -72,8 +74,7 @@ def seed_db():
     registration1 = Registration(
         participant_id = participant1.id,
         race_id = race1.id,
-        # automatically decides the age group depending on participant's age
-        age_group_id = 1,
+        age_group_id = 3,
         gender_group = participant1.gender,
         # registration date needs to be on or before race date
         registration_date = race1.date,
@@ -92,7 +93,7 @@ def seed_db():
         finish_at = datetime.strptime('08:00:00', '%H:%M:%S'),
     )
     result1.finish_time = result1.finish_at - result1.start_at
-    result1.pace = timedelta(seconds = result1.finish_time.total_seconds()/race1.distance)
+    result1.pace = result1.finish_time #timedelta(seconds = result1.finish_time.total_seconds()/race1.distance)
     db.session.add(result1)
     db.session.commit()
 

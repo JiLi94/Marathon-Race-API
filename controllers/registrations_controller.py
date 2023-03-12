@@ -1,65 +1,25 @@
 from flask import Blueprint, jsonify, request, abort
+from sqlalchemy import and_
+from sqlalchemy.sql.functions import coalesce
 from main import db, bcrypt, jwt
 from models.registrations import Registration
 from models.participants import Participant
+from models.races import Race
+from models.age_groups import Age_group
 from controllers.participants_controller import is_admin
 from schemas.registration_schema import registration_schema, registrations_schema
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from functools import wraps
+from validator import validate_input, is_admin
 
 registrations = Blueprint('registrations', __name__, url_prefix='/registrations')
 
-# a decorator to handle data validation
-def validate_input(required_fields=[]):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            registration_fields = registration_schema.load(request.json)
-            # check if the user input enough information
-            for arg in required_fields:
-                if arg not in registration_fields:
-                    return abort(400, description='Not enough information provided')
-
-            # def a function to validate number
-            def validate_num(field_name):
-                try:
-                    if field_name in registration_fields:
-                        if int(registration_fields[field_name]) <= 0:
-                            return abort(400, description=f'Please enter a valid number for {field_name}')
-                except ValueError:
-                    return abort(400, description=f'Please enter a valid number for {field_name}')
-
-            # def a function to validate date or time input
-            def validate_datetime(field_name, datetime_format):
-                try:
-                    if field_name in registration_fields:
-                        date_or_time = datetime.strptime(
-                            registration_fields[field_name], datetime_format)
-                except ValueError:
-                    return abort(400, description=f'Please enter a valid date for {field_name} in the format of {datetime_format}')
-
-            # validate all inputs using functions above
-            validate_num('participant_id')
-            validate_datetime('race_id', '%Y-%m-%d')
-            validate_datetime('registration_date', '%H:%M:%S')
-            validate_datetime('cut_off_time', '%H:%M:%S')
-
-            return func(*args, **kwargs)
-        return wrapper
-    return decorator
-
 # a route to view all registrations, should be admin only
-@registrations.route('/all', methods = ['GET'])
-@jwt_required()
+@registrations.route('/', methods=['GET'])
 @is_admin
 def get_registrations():
-    # get id of the user
-    # id = get_jwt_identity()
-    # participant = Participant.query.get(id)
-    # # if user does not exist or not admin, return error
-    # if not participant or not participant.admin:
-    #     return abort(401, description='Invalid User')
     # query all registrations from the database
     registrations_list = Registration.query.all()
     # convert to json format
@@ -69,17 +29,52 @@ def get_registrations():
 
 
 # add registration
-@registrations.route('/add', methods=['POST'])
-@jwt_required()
+@registrations.route('/', methods=['POST'])
 @is_admin
+@validate_input(registration_schema, ['participant_id','race_id','registration_date','bib_number'])
 def add_registration():
     registration_fields = registration_schema.load(request.json)
+    # return jsonify(description='ok')
+    # check if participant exists
+    participant = Participant.query.get(registration_fields['participant_id'])
+    if not participant:
+        return abort(404, description='Participant not found')
 
+    # check if race exists
+    race = Race.query.get(registration_fields['race_id'])
+    if not race:
+        return abort(404, description='Race not found')
 
+    # check if the registration already exists
+    existing_registration = Registration.query.filter_by(
+        participant_id=registration_fields['participant_id'], race_id=registration_fields['race_id']).first()
+    if existing_registration:
+        return abort(400, description='The registration already exists')
+    
+    # check if bib number exists
+    existing_bib = Registration.query.filter_by(
+        bib_number=registration_fields['bib_number']).first()
+    if existing_bib:
+        return abort(400, description='Bib number already exists')
+
+    registration = Registration(**registration_fields)
+    # automatically assign age group based on participant's age on the race date
+    # age = (race.date - participant.date_of_birth).days()/365
+    age = relativedelta(race.date, participant.date_of_birth).years
+    print(race.date, participant.date_of_birth, age)
+    # registration.age_group_id = Age_group.query.filter(
+    #     age.between(Age_group.min_age, Age_group.max_age)).first()
+    registration.age_group_id = Age_group.query.filter(and_(age<=coalesce(Age_group.max_age, age), age>=Age_group.min_age)).first().id
+    # automatically assign gender group based on participant's gender
+    registration.gender_group = 'male' if participant.gender == 'male' else 'female'
+    # add to the database
+    db.session.add(registration)
+    db.session.commit()
+    return jsonify(registration_schema.dump(registration))
 
 
 # a route to view all participants under a race
 
-# register 
+# register
 # need to check if the participant is already registered, can automatically assign gender and age group
 # check if field limit is exceeded
