@@ -18,7 +18,7 @@ class RegistrationSchema(ma.Schema):
     age_group = fields.Nested('AgeGroupSchema', only = ['min_age', 'max_age'])
 
 
-# single participant schema, which allows to retrieve single race
+# single registration schema, which allows to retrieve single registration
 registration_schema = RegistrationSchema()
-# multiple participants schema, which allows to retrieve multiple races
+# multiple registration schema, which allows to retrieve multiple registrations
 registrations_schema = RegistrationSchema(many=True)

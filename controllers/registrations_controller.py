@@ -1,17 +1,14 @@
 from flask import Blueprint, jsonify, request, abort
 from sqlalchemy import and_
 from sqlalchemy.sql.functions import coalesce
-from main import db, bcrypt, jwt
+from main import db
 from models.registrations import Registration
 from models.participants import Participant
 from models.races import Race
 from models.age_groups import Age_group
 from controllers.participants_controller import is_admin
 from schemas.registration_schema import registration_schema, registrations_schema
-from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from flask_jwt_extended import get_jwt_identity, jwt_required
-from functools import wraps
 from validator import validate_input, is_admin
 
 registrations = Blueprint('registrations', __name__, url_prefix='/registrations')
@@ -73,8 +70,14 @@ def add_registration():
     return jsonify(registration_schema.dump(registration))
 
 
-# a route to view all participants under a race
+# a route to delete registration
+# @registrations.route('/<int:registration_id>', methods=['PUT'])
+# @is_admin
+# @validate_input(registration_schema)
+# def update_registration(registration_id):
+#     input_fields = registration_schema.load(request.json)
+#     registration = Registration.query.get(registration_id)
+#     if not registration:
+#         return abort(404, description='Registration not found')
+    
 
-# register
-# need to check if the participant is already registered, can automatically assign gender and age group
-# check if field limit is exceeded

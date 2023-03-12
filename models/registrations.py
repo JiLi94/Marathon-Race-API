@@ -13,3 +13,8 @@ class Registration(db.Model):
     gender_group = db.Column(db.String(), nullable=False)
     registration_date = db.Column(db.Date(), nullable=False)
     bib_number = db.Column(db.String(), nullable=False)
+    result = db.relationship(
+        'Result',
+        backref = 'result',
+        cascade = 'all, delete'
+    )

@@ -8,7 +8,7 @@ class AgeGroupSchema(ma.Schema):
         # make sure output is ordered as the order in the fields
         ordered = True
 
-# single participant schema, which allows to retrieve single race
+# single age group schema, which allows to retrieve single age group
 age_group_schema = AgeGroupSchema()
-# multiple participants schema, which allows to retrieve multiple races
+# multiple age group schema, which allows to retrieve multiple age groups
 age_groups_schema = AgeGroupSchema(many=True)

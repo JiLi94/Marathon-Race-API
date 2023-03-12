@@ -8,7 +8,7 @@ class RaceSchema(ma.Schema):
         # make sure output is ordered as the order in the fields
         ordered = True
 
-# single participant schema, which allows to retrieve single race
+# single race schema, which allows to retrieve single race
 race_schema = RaceSchema()
-# multiple participants schema, which allows to retrieve multiple races
+# multiple races schema, which allows to retrieve multiple races
 races_schema = RaceSchema(many=True)
