@@ -17,5 +17,5 @@ class Participant(db.Model):
     registrations = db.relationship(
         'Registration',
         backref = 'participant',
-        cascade = 'all, delete'
+        # cascade = 'all, delete'
     )

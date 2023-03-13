@@ -19,6 +19,6 @@ class Race(db.Model):
     registrations = db.relationship(
         'Registration',
         backref = 'race',
-        cascade = 'all, delete'
+        # cascade = 'all, delete'
     )
     

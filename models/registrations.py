@@ -19,6 +19,6 @@ class Registration(db.Model):
     result = db.relationship(
         'Result',
         backref = 'result',
-        cascade = 'all, delete',
+        # cascade = 'all, delete',
         uselist = False
     )

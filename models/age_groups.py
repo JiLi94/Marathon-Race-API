@@ -12,5 +12,5 @@ class Age_group(db.Model):
     registrations = db.relationship(
         'Registration',
         backref = 'age_group',
-        cascade = 'all, delete'
+        # cascade = 'all, delete'
     )

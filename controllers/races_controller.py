@@ -61,3 +61,18 @@ def update_race(race_id):
     # # convert to json format
     result = race_schema.dump(race)
     return jsonify(msg='Updated successfully', Updated=result)
+
+# a route to delete a race
+@races.route('/<int:id>', methods=['DELETE'])
+@is_admin
+def delete_registration(id):
+    race = Race.query.get(id)
+    race_serialized = race_schema.dump(race)
+    if race:
+        try:
+            db.session.delete(race)
+            db.session.commit()    
+            return jsonify(msg = 'Race deleted successfully', result = race_serialized)
+        except exc.IntegrityError:
+            return abort(400, description='Please delete the registrations linked with this race before deleting this race')
+    return abort(404, description = 'Race not found')

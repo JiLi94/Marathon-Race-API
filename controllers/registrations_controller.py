@@ -10,7 +10,6 @@ from controllers.participants_controller import is_admin
 from schemas.registration_schema import registration_schema, registrations_schema
 from dateutil.relativedelta import relativedelta
 from validator import validate_input, is_admin
-import json
 
 registrations = Blueprint('registrations', __name__, url_prefix='/registrations')
 
@@ -95,9 +94,11 @@ def delete_registration(id):
     registration = Registration.query.get(id)
     registration_serialized = registration_schema.dump(registration)
     if registration:
-        db.session.delete(registration)
-        db.session.commit()    
-        return jsonify(msg = 'Result deleted successfully', result = registration_serialized)
-    
+        try:
+            db.session.delete(registration)
+            db.session.commit()    
+            return jsonify(msg = 'Registration deleted successfully', result = registration_serialized)
+        except exc.IntegrityError:
+            return abort(400, description='Please delete the result linked with this registration before deleting this registration')
     return abort(404, description = 'Registration not found')
 
