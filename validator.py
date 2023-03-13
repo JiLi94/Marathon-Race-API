@@ -69,10 +69,10 @@ class Validator():
         if self.data['gender'].lower() not in ['male', 'female']:
             return abort(400, description='Please select male or female for gender')
 
-    # validate admin format (should be either True or False)
-    def validate_admin(self, field):
-        if not isinstance(self.data['admin'], bool):
-            return abort(400, description='Please select True or False for admin')
+    # validate boolean format (should be either True or False)
+    def validate_boolean(self, field):
+        if not isinstance(self.data[field], bool):
+            return abort(400, description=f'Please select True or False for {field}')
         
 
 # define a decorator to validate format of user details, such as name and email format
@@ -94,9 +94,9 @@ def validate_input(schema, required_fields=[]):
             validator = Validator(input_fields)
             for field in input_fields:
                 match field:
-                    case 'name' |'start_line' | 'finish_line' |'bib_number':
+                    case 'name'|'start_line'|'finish_line'|'bib_number':
                         validator.validate_string(field)
-                    case 'first_name' | 'last_name':
+                    case 'first_name'|'last_name':
                         validator.validate_name(field)
                     case 'email':
                         validator.validate_emails()
@@ -108,11 +108,11 @@ def validate_input(schema, required_fields=[]):
                         validator.validate_datetime(field, '%Y-%m-%d')
                     case 'gender':
                         validator.validate_gender()
-                    case 'admin':
-                        validator.validate_admin(field)
-                    case 'distance'| 'fee' | 'field_limit' | 'participant_id' | 'race_id':
+                    case 'admin'|'finished':
+                        validator.validate_boolean(field)
+                    case 'distance'|'fee'|'field_limit'|'participant_id'|'race_id'|'registration_id':
                         validator.validate_number(field, 0)
-                    case 'start_time'|'end_time':
+                    case 'start_time'|'end_time'|'start_at'|'finish_at':
                         validator.validate_datetime(field, '%H:%M:%S')
 
             return func(*args, **kwargs)
