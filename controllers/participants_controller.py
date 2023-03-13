@@ -41,11 +41,11 @@ def register_participant():
     try:
         db.session.commit()
     # if IntegrityError, means email or mobile is already registered
-    except exc.IntegrityError as err:
+    except exc.IntegrityError:
         return abort(400, description='Participant already registered')
 
     # create a variable to store token expiration time
-    expiry = timedelta(hours=1)
+    expiry = timedelta(hours=6)
     # create access token
     access_token = create_access_token(
         identity=str(participant.id), expires_delta=expiry)
@@ -73,7 +73,7 @@ def login():
         return abort(401, description="Incorrect login details")
 
     # create a variable to store token expiration time
-    expiry = timedelta(hours=1)
+    expiry = timedelta(hours=6)
     # create access token
     access_token = create_access_token(
         identity=str(participant.id), expires_delta=expiry)

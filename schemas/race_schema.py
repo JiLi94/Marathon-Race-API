@@ -7,6 +7,7 @@ class RaceSchema(ma.Schema):
         fields = ('id','name','distance','date','start_time','cut_off_time','field_limit','start_line', 'finish_line', 'fee')
         # make sure output is ordered as the order in the fields
         ordered = True
+        dump_only = ['id']
 
 # single race schema, which allows to retrieve single race
 race_schema = RaceSchema()

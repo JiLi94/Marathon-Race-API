@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_marshmallow import Marshmallow
 from flask_jwt_extended import JWTManager
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={"autoflush": False})
 bcrypt = Bcrypt()
 ma = Marshmallow()
 jwt = JWTManager()

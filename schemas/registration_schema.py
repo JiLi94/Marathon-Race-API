@@ -8,6 +8,7 @@ class RegistrationSchema(ma.Schema):
         fields = ('participant', 'race', 'age_group','participant_id', 'race_id', 'age_group_id',
                   'gender_group', 'registration_date', 'bib_number')
         load_only = ['participant_id', 'race_id', 'age_group_id']
+        dump_only = ['age_group_id', 'gender_group']
         # make sure output is ordered as the order in the fields
         ordered = True
     # only include first and last name of the participant

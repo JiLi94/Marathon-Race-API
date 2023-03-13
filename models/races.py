@@ -15,6 +15,7 @@ class Race(db.Model):
     start_line = db.Column(db.String(), nullable=False)
     finish_line = db.Column(db.String(), nullable=False)
     fee = db.Column(db.Numeric(10,2), nullable=False)
+    constraint = db.UniqueConstraint(name, date)
     registrations = db.relationship(
         'Registration',
         backref = 'race',

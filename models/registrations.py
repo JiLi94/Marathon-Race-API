@@ -13,6 +13,9 @@ class Registration(db.Model):
     gender_group = db.Column(db.String(), nullable=False)
     registration_date = db.Column(db.Date(), nullable=False)
     bib_number = db.Column(db.String(), nullable=False)
+    # add a constraint: the combination of participant id and race id should be unique
+    constraint = db.UniqueConstraint(participant_id, race_id)
+    constraint = db.UniqueConstraint(bib_number, race_id)
     # result = db.relationship(
     #     'Result',
     #     backref = 'result',

@@ -58,8 +58,7 @@ def get_race_results():
 def validate_results_schema(input):
     registration = Registration.query.get(input['registration_id'])
     if not registration:
-        return abort(404, 'Registration not found')
-    
+        return abort(404, description='Registration not found')
     # finish time should be larger than start time
     if input['finish_at'] <= input['start_at']:
         return abort(400, 'Finish time cannot be earlier than start time')
@@ -67,8 +66,8 @@ def validate_results_schema(input):
     # calculate finish time automatically
     delta = (datetime.strptime(input['finish_at'],'%H:%M:%S') - datetime.strptime(input['start_at'],'%H:%M:%S'))
     input['finish_time'] = str(delta)
-    race = Race.query.get(registration.race_id)
     # calculate pace: time used per kilometer
+    race = Race.query.get(registration.race_id)
     input['pace'] = (datetime(2000,1,1) + timedelta(seconds=delta.total_seconds()/float(race.distance))).time().strftime('%H:%M:%S')
     return input
 
@@ -95,22 +94,34 @@ def add_result():
 @is_admin
 @validate_input(result_schema)
 def update_result(result_id):
-    input = validate_results_schema(result_schema.load(request.json))
+    input = result_schema.load(request.json)
     result = Result.query.get(result_id)
 
     # update fields
-    for key, value in input.items():
-        if getattr(result, key) is not None and getattr(result, key) != value:
-            setattr(result, key, value)
+    if result:
+        for key, value in input.items():
+            if getattr(result, key) is not None and getattr(result, key) != value:
+                setattr(result, key, value)
+    else:
+        return abort(404, description = 'Result not found')
+    
     try:
+        result = validate_results_schema(result_schema.dump(result))
         db.session.commit()
     except exc.IntegrityError:
         return abort(400, description='Result with same registration id already exists')
-
-    result = validate_results_schema(result_schema.dump(result))
-    db.session.commit()
     return jsonify(msg = 'Updated successfully', result = result_schema.dump(result))
     
 
-
-
+# a route to delete an existing result
+@results.route('/<int:result_id>', methods = ['DELETE'])
+@is_admin
+def delete_result(result_id):
+    result = Result.query.get(result_id)
+    result_serialized = result_schema.dump(result)
+    if result:
+        db.session.delete(result)
+        db.session.commit()    
+        return jsonify(msg = 'Result deleted successfully', result = result_serialized)
+    
+    return abort(404, description = 'Result not found')
