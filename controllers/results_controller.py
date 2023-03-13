@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, abort
 from main import db
-from sqlalchemy import text
+from sqlalchemy import text, exc
 from models.results import Result
 from models.registrations import Registration
 from models.races import Race
@@ -54,69 +54,63 @@ def get_race_results():
     }
     return jsonify(output)
 
-# def validate_results_schema(input, method):
-#     registration = Registration.query.get(input['registration_id'])
-#     if not registration:
-#         return abort(404, 'Registration not found')
-        
-#     # check if there already exists a result for this registration
-#     existing_result = Result.query.filter_by(registration_id = input['registration_id']).first()
-#     # if creating a new result, no existing result should exist
-#     if method=='POST' and existing_result:
-#         return abort(400, 'Registration already linked with a result')
-#     # if updating a result, no 
-#     elif method=='PUT' and existing_result.id != input['registration_id']:
-#         return abort(400, 'Registration already linked with a result')
-    
-#     # finish time should be larger than start time
-#     if input['finish_at'] <= input['start_at']:
-#         return abort(400, 'Finish time cannot be earlier than start time')
-        
-#     # calculate finish time automatically
-#     delta = (datetime.strptime(input['finish_at'],'%H:%M:%S') - datetime.strptime(input['start_at'],'%H:%M:%S'))
-#     input['finish_time'] = str(delta)
-#     race = Race.query.get(registration.race_id)
-#     # calculate pace: time used per kilometer
-#     input['pace'] = (datetime(2000,1,1) + timedelta(seconds=delta.total_seconds()/float(race.distance))).time().strftime('%H:%M:%S')
-#     return input
-
-# a route to add new result
-@results.route('/', methods=['POST'])
-@is_admin
-@validate_input(result_schema, ['registration_id','finished','start_at','finish_at'])
-def add_result():
-    input = result_schema.load(request.json)
-    # check if the registration exists, if not, return err
+# def a function to make sure the inputs are meaningful
+def validate_results_schema(input):
     registration = Registration.query.get(input['registration_id'])
     if not registration:
         return abort(404, 'Registration not found')
     
-    # check if there already exists a result for this registration
-    existing_result = Result.query.filter_by(registration_id = input['registration_id']).first()
-    if existing_result:
-        return abort(400, 'Result already exists')
-    
     # finish time should be larger than start time
     if input['finish_at'] <= input['start_at']:
         return abort(400, 'Finish time cannot be earlier than start time')
-    
+        
     # calculate finish time automatically
     delta = (datetime.strptime(input['finish_at'],'%H:%M:%S') - datetime.strptime(input['start_at'],'%H:%M:%S'))
     input['finish_time'] = str(delta)
     race = Race.query.get(registration.race_id)
     # calculate pace: time used per kilometer
     input['pace'] = (datetime(2000,1,1) + timedelta(seconds=delta.total_seconds()/float(race.distance))).time().strftime('%H:%M:%S')
-    # add to the database
+    return input
+
+# a route to add new result
+@results.route('/', methods=['POST'])
+@is_admin
+# make sure inputs are in valid format
+@validate_input(result_schema, ['registration_id','finished','start_at','finish_at'])
+def add_result():
+    # make sure inputs are meaningful
+    input = validate_results_schema(result_schema.load(request.json))
     result = Result(**input)
     db.session.add(result)
-    db.session.commit()
+    try:
+        db.session.commit()
+    # if integrity err, means duplicated registration ids found
+    except exc.IntegrityError:
+        return abort(400, description='Result with same registration id already exists')
+    
     return jsonify(description='Added successfully', result = input)
 
 # a route to update existing result
-# @results.route('/<int:result_id>', methods=['PUT'])
-# @is_admin
-# @validate_input(result_schema)
-# def update_result(result_id):
-#     result = Result.query.get(result_id)
+@results.route('/<int:result_id>', methods=['PUT'])
+@is_admin
+@validate_input(result_schema)
+def update_result(result_id):
+    input = validate_results_schema(result_schema.load(request.json))
+    result = Result.query.get(result_id)
+
+    # update fields
+    for key, value in input.items():
+        if getattr(result, key) is not None and getattr(result, key) != value:
+            setattr(result, key, value)
+    try:
+        db.session.commit()
+    except exc.IntegrityError:
+        return abort(400, description='Result with same registration id already exists')
+
+    result = validate_results_schema(result_schema.dump(result))
+    db.session.commit()
+    return jsonify(msg = 'Updated successfully', result = result_schema.dump(result))
+    
+
 
 

@@ -117,11 +117,8 @@ def update_personal_details(participant_id):
     elif user.admin or user.id == participant.id:
         # else, can continue to update fields
         for key, value in input_fields.items():
-            # not allowed to update primary key id
-            if key == 'id':
-                continue
             # if user is admin, allow to update the 'admin' field
-            elif key == 'admin':
+            if key == 'admin':
                 if participant.admin:
                     participant.admin = value
             elif key == 'password':
