@@ -1,14 +1,13 @@
 from flask import Blueprint, jsonify, request, abort
-from sqlalchemy import or_
-from main import db, bcrypt, jwt
+from sqlalchemy import exc
+from main import db, bcrypt
 from models.participants import Participant
 from models.registrations import Registration
 from schemas.participant_schema import participant_schema, participants_schema
 from schemas.registration_schema import registrations_schema
 from datetime import  timedelta
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from functools import wraps
-from validator import Validator, validate_input, is_admin
+from validator import validate_input, is_admin
 
 participants = Blueprint('participants', __name__, url_prefix='/participants')
 
@@ -30,19 +29,6 @@ def get_participants():
 def register_participant():
     # import request
     participant_fields = participant_schema.load(request.json)
-
-    # check if user is already registered, check both email and mobile
-    participant = Participant.query.filter(or_(
-        Participant.email == participant_fields['email'], Participant.mobile == participant_fields['mobile'])).first()
-    # if participant is already registered, return error message
-    if participant:
-        return abort(400, description='Participant already registered')
-
-    # not allow to register the id, id should be given by the system
-    if 'id' in participant_fields:
-        participant_fields.pop('id') 
-
-    # if all good, create participant object
     participant = Participant(**participant_fields)
     # hash password
     participant.password = bcrypt.generate_password_hash(participant_fields['password']).decode('utf-8')
@@ -52,7 +38,11 @@ def register_participant():
     participant.admin = False
     # add to the database
     db.session.add(participant)
-    db.session.commit()
+    try:
+        db.session.commit()
+    # if IntegrityError, means email or mobile is already registered
+    except exc.IntegrityError as err:
+        return abort(400, description='Participant already registered')
 
     # create a variable to store token expiration time
     expiry = timedelta(hours=1)
@@ -125,13 +115,6 @@ def update_personal_details(participant_id):
         return abort(404, description='User not found')
     # if user is admin, or user is trying to update their own details, continue to update
     elif user.admin or user.id == participant.id:
-        # check if email or mobile is used by other participants
-        other_participant = Participant.query.filter(or_(
-            Participant.email == input_fields['email'], Participant.mobile == input_fields['mobile'])).first()
-        # if yes, return error
-        if (other_participant is not None) and (other_participant.id != int(participant.id)):
-            return abort(400, description='Email or mobile already registered by another participant')
-
         # else, can continue to update fields
         for key, value in input_fields.items():
             # not allowed to update primary key id
@@ -147,8 +130,10 @@ def update_personal_details(participant_id):
             # update other attributes
             elif getattr(participant, key) is not None and getattr(participant, key) != value:
                 setattr(participant, key, value)
-
-        db.session.commit()
+        try:
+            db.session.commit()
+        except exc.IntegrityError:
+            return abort(400, description='Email or mobile already registered')
         # # convert to json format
         result = participant_schema.dump(participant)
         return jsonify(msg='Updated successfully', Updated=result)

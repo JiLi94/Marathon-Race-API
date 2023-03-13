@@ -6,7 +6,7 @@ class Result(db.Model):
     # add primary key
     id = db.Column(db.Integer(), primary_key=True)
     # add foreign key
-    registration_id = db.Column(db.Integer(), db.ForeignKey('registrations.id'), nullable=False)
+    registration_id = db.Column(db.Integer(), db.ForeignKey('registrations.id'), nullable=False, unique=True)
     # add other columns
     finished = db.Column(db.Boolean(), nullable=False)
     # the timestamp when started and finished

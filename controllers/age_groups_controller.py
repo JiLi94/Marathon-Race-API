@@ -1,7 +1,6 @@
 from flask import Blueprint, jsonify, request, abort
-from main import db, bcrypt, jwt
 from models.age_groups import Age_group
-from schemas.age_group_schema import age_group_schema, age_groups_schema
+from schemas.age_group_schema import age_groups_schema
 
 
 age_groups = Blueprint('age_groups', __name__, url_prefix='/age_groups')

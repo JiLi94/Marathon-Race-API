@@ -1,4 +1,5 @@
 from flask import abort, request
+from marshmallow.exceptions import ValidationError
 from email_validator import validate_email, EmailNotValidError
 from phonenumbers import parse, is_valid_number
 from password_strength import PasswordPolicy
@@ -81,8 +82,12 @@ def validate_input(schema, required_fields=[]):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            input_fields = schema.load(request.json)
-            # check if the user inputs enough information
+            # if user inputs unknown fields, return error
+            try:
+                input_fields = schema.load(request.json)
+            except ValidationError as e:
+                return abort(400, description=e)
+            #check if the user inputs enough information
             missing_fields = []
             for field in required_fields:
                 if field not in input_fields:
@@ -127,6 +132,5 @@ def is_admin(func):
         participant = Participant.query.get(id)
         if not participant or not participant.admin:
             return abort(401, description='Invalid User')
-
         return func(*args, **kwargs)
     return wrapper

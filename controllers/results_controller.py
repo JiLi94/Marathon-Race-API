@@ -7,7 +7,6 @@ from models.races import Race
 from models.age_groups import Age_group
 from models.results import Result
 from schemas.result_schema import result_schema, results_schema
-from schemas.registration_schema import registrations_schema
 from validator import is_admin, validate_input
 from datetime import datetime, timedelta
 
@@ -55,6 +54,32 @@ def get_race_results():
     }
     return jsonify(output)
 
+# def validate_results_schema(input, method):
+#     registration = Registration.query.get(input['registration_id'])
+#     if not registration:
+#         return abort(404, 'Registration not found')
+        
+#     # check if there already exists a result for this registration
+#     existing_result = Result.query.filter_by(registration_id = input['registration_id']).first()
+#     # if creating a new result, no existing result should exist
+#     if method=='POST' and existing_result:
+#         return abort(400, 'Registration already linked with a result')
+#     # if updating a result, no 
+#     elif method=='PUT' and existing_result.id != input['registration_id']:
+#         return abort(400, 'Registration already linked with a result')
+    
+#     # finish time should be larger than start time
+#     if input['finish_at'] <= input['start_at']:
+#         return abort(400, 'Finish time cannot be earlier than start time')
+        
+#     # calculate finish time automatically
+#     delta = (datetime.strptime(input['finish_at'],'%H:%M:%S') - datetime.strptime(input['start_at'],'%H:%M:%S'))
+#     input['finish_time'] = str(delta)
+#     race = Race.query.get(registration.race_id)
+#     # calculate pace: time used per kilometer
+#     input['pace'] = (datetime(2000,1,1) + timedelta(seconds=delta.total_seconds()/float(race.distance))).time().strftime('%H:%M:%S')
+#     return input
+
 # a route to add new result
 @results.route('/', methods=['POST'])
 @is_admin
@@ -81,8 +106,17 @@ def add_result():
     race = Race.query.get(registration.race_id)
     # calculate pace: time used per kilometer
     input['pace'] = (datetime(2000,1,1) + timedelta(seconds=delta.total_seconds()/float(race.distance))).time().strftime('%H:%M:%S')
+    # add to the database
     result = Result(**input)
     db.session.add(result)
     db.session.commit()
-    # return 'added'
     return jsonify(description='Added successfully', result = input)
+
+# a route to update existing result
+# @results.route('/<int:result_id>', methods=['PUT'])
+# @is_admin
+# @validate_input(result_schema)
+# def update_result(result_id):
+#     result = Result.query.get(result_id)
+
+

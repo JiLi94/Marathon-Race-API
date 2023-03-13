@@ -56,11 +56,7 @@ def add_registration():
 
     registration = Registration(**registration_fields)
     # automatically assign age group based on participant's age on the race date
-    # age = (race.date - participant.date_of_birth).days()/365
     age = relativedelta(race.date, participant.date_of_birth).years
-    print(race.date, participant.date_of_birth, age)
-    # registration.age_group_id = Age_group.query.filter(
-    #     age.between(Age_group.min_age, Age_group.max_age)).first()
     registration.age_group_id = Age_group.query.filter(and_(age<=coalesce(Age_group.max_age, age), age>=Age_group.min_age)).first().id
     # automatically assign gender group based on participant's gender
     registration.gender_group = 'male' if participant.gender == 'male' else 'female'

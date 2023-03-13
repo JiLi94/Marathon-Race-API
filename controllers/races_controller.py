@@ -1,11 +1,8 @@
 from flask import Blueprint, jsonify, request, abort
-from main import db, bcrypt, jwt
+from main import db
 from models.races import Race
-from models.participants import Participant
 from controllers.participants_controller import is_admin
 from schemas.race_schema import race_schema, races_schema
-from datetime import datetime, timedelta
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import text
 from validator import validate_input, is_admin
 
