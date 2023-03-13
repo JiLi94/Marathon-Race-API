@@ -18,7 +18,7 @@ def get_race_results():
     args = request.args
     race_id = (int(args.get('race_id', False)) or None)
     age_group_id = (int(args.get('age_group_id', False)) or None)
-    gender_group = (args.get('gender_group', False).lower() or None)
+    gender_group = (args.get('gender_group', False) or None)
     # query the database to check existing registrations with same race, age group and gender
     sql = text('SELECT a.* FROM results AS a, registrations AS b\
                 WHERE a.registration_id = b.id \
@@ -44,12 +44,12 @@ def get_race_results():
     age_group = Age_group.query.get(age_group_id)
     # add the race, age group, gender and results to the final output
     output = {
-        'race': race.name,
+        'race': race.name if hasattr(race, 'name') else 'All',
         'age_group': {
-            'min_age': age_group.min_age,
-            'max_age': age_group.max_age
+            'min_age': age_group.min_age if hasattr(age_group, 'min_age') else 'All',
+            'max_age': age_group.max_age if hasattr(age_group, 'max_age') else 'All'
         },
-        'gender_group': gender_group,
+        'gender_group': gender_group or 'All',
         'results': results_schema.dump(results_list)
     }
     return jsonify(output)

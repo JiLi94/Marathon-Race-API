@@ -150,8 +150,7 @@ def get_races_participant(participant_id):
     # only allow to check the registration if the participant is trying to check their own registration or the user is admin
     if int(id) == participant_id or participant.admin:
         # query all registrations under the participant from the database
-        registrations_list = Registration.query.filter_by(
-            participant_id=participant_id).all()
+        registrations_list = Registration.query.filter_by(participant_id = participant_id).all()
         # convert to json format
         result = registrations_schema.dump(registrations_list)
         # return the result

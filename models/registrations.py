@@ -16,8 +16,9 @@ class Registration(db.Model):
     # add a constraint: the combination of participant id and race id should be unique
     constraint = db.UniqueConstraint(participant_id, race_id)
     constraint = db.UniqueConstraint(bib_number, race_id)
-    # result = db.relationship(
-    #     'Result',
-    #     backref = 'result',
-    #     cascade = 'all, delete'
-    # )
+    result = db.relationship(
+        'Result',
+        backref = 'result',
+        cascade = 'all, delete',
+        uselist = False
+    )

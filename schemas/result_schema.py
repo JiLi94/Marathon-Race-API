@@ -8,8 +8,8 @@ class ResultSchema(ma.Schema):
         fields = ('registration','id','registration_id','finished','start_at','finish_at','finish_time','pace')
         # make sure output is ordered as the order in the fields
         ordered = True
-        dump_only = ['id']
-        # load_only = ['registration_id']
+        load_only = ['id', 'registration_id']
+
     # only extract the participant's name
     registration = fields.Pluck('RegistrationSchema', 'participant', data_key='participant')
 

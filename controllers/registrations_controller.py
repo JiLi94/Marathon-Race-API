@@ -25,31 +25,6 @@ def get_registrations():
     # return the result
     return jsonify(result)
 
-# # def a func to make sure inputs are meaningful
-# def validate_registration_schema(input):
-#     # check if participant exists
-#     participant = Participant.query.get(input['participant_id'])
-#     if not participant:
-#         return abort(404, description='Participant not found')
-
-#     # check if race exists
-#     race = Race.query.get(input['race_id'])
-#     if not race:
-#         return abort(404, description='Race not found')
-
-#     # check if bib number exists
-#     existing_bib = Registration.query.filter_by(
-#         bib_number=input['bib_number'], race_id=input['race_id']).first()
-#     if existing_bib:
-#         return abort(400, description='Bib number already exists')
-
-#     # automatically assign age group based on participant's age on the race date
-#     age = relativedelta(race.date, participant.date_of_birth).years
-#     input['age_group_id'] = Age_group.query.filter(and_(age<=coalesce(Age_group.max_age, age), age>=Age_group.min_age)).first().id
-#     # automatically assign gender group based on participant's gender
-#     input['gender_group'] = 'male' if participant.gender == 'male' else 'female'
-#     return input
-
 # add registration
 @registrations.route('/', methods=['POST'])
 @is_admin
@@ -65,12 +40,6 @@ def add_registration():
     race = Race.query.get(input['race_id'])
     if not race:
         return abort(404, description='Race not found')
-
-    # check if bib number exists
-    # existing_bib = Registration.query.filter_by(
-    #     bib_number=input['bib_number'], race_id=input['race_id']).first()
-    # if existing_bib:
-    #     return abort(400, description='Bib number already exists')
 
     # automatically assign age group based on participant's age on the race date
     age = relativedelta(race.date, participant.date_of_birth).years
@@ -112,26 +81,23 @@ def update_registration(id):
     if not race:
         return abort(404, description='Race not found')
 
-    # check if bib number exists
-    # existing_bib = Registration.query.filter_by(
-    #     bib_number=registration.bib_number, race_id=registration.race_id).first()
-    # if existing_bib and existing_bib.id != registration.id:
-    #     return abort(400, description='Bib number already exists')  
-
     try:
         db.session.commit()
     except exc.IntegrityError:
         return abort(400, description='Registration or bib number already exists')
     
     return jsonify(msg = 'Updated successfully', registration = registration_schema.dump(registration))
+
 # a route to delete registration
-# @registrations.route('/<int:registration_id>', methods=['PUT'])
-# @is_admin
-# @validate_input(registration_schema)
-# def update_registration(registration_id):
-#     input_fields = registration_schema.load(request.json)
-#     registration = Registration.query.get(registration_id)
-#     if not registration:
-#         return abort(404, description='Registration not found')
+@registrations.route('/<int:id>', methods = ['DELETE'])
+@is_admin
+def delete_registration(id):
+    registration = Registration.query.get(id)
+    registration_serialized = registration_schema.dump(registration)
+    if registration:
+        db.session.delete(registration)
+        db.session.commit()    
+        return jsonify(msg = 'Result deleted successfully', result = registration_serialized)
     
+    return abort(404, description = 'Registration not found')
 
