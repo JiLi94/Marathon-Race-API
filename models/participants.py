@@ -16,6 +16,4 @@ class Participant(db.Model):
     admin = db.Column(db.Boolean(), nullable=False, default=False)
     registrations = db.relationship(
         'Registration',
-        backref = 'participant',
-        # cascade = 'all, delete'
     )

@@ -30,13 +30,13 @@ def get_participants():
 def register_participant():
     # import request
     participant_fields = participant_schema.load(request.json)
-    participant = Participant(**participant_fields)
+    # sanitise the email address
+    participant_fields['email'] = participant_fields['email'].lower()
     # hash password
-    participant.password = bcrypt.generate_password_hash(participant_fields['password']).decode('utf-8')
+    participant_fields['password'] = bcrypt.generate_password_hash(participant_fields['password']).decode('utf-8')
     # convert gender to lower case
-    participant.gender = participant_fields['gender'].lower()
-    # default admin to be false
-    participant.admin = False
+    participant_fields['gender'] = participant_fields['gender'].lower()
+    participant = Participant(**participant_fields)
     # add to the database
     db.session.add(participant)
     try:

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models.participants import Participant
+import re
 
 class Validator():
 
@@ -49,12 +50,16 @@ class Validator():
 
     # validate mobile number
     def validate_mobile(self):
+        mobile = self.data['mobile']
+        err_msg = 'Please enter a valid Australia mobile number starting with 04'
+        if mobile[0:2] != '04':
+            return abort(400, description=err_msg)
         try:
             mobile = parse(self.data['mobile'], 'AU')
             if not is_valid_number(mobile):
-                return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
+                return abort(400, description=err_msg)
         except:
-            return abort(400, description='Please enter a valid Australia mobile number or add country code in front of the number')
+            return abort(400, description=err_msg)
 
     # validate password
     def validate_password(self):
