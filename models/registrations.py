@@ -18,7 +18,7 @@ class Registration(db.Model):
     constraint = db.UniqueConstraint(bib_number, race_id)
     result = db.relationship(
         'Result',
-        backref = 'result',
-        # cascade = 'all, delete',
+        backref = 'registration',
+        # make sure it's one-to-one relationship
         uselist = False
     )
