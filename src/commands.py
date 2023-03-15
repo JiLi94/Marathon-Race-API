@@ -90,7 +90,7 @@ def seed_db():
         # start_at should be larger than race start time
         start_at = datetime.strptime('07:00:00', '%H:%M:%S'),
         # if finished, finish_at should be smaller than race cut_off time
-        finish_at = datetime.strptime('08:00:00', '%H:%M:%S'),
+        finish_at = datetime.strptime('09:00:00', '%H:%M:%S'),
     )
     result1.finish_time = result1.finish_at - result1.start_at
     result1.pace = result1.finish_time #timedelta(seconds = result1.finish_time.total_seconds()/race1.distance)

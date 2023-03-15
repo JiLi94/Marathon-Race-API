@@ -50,8 +50,15 @@ def register_participant():
     # create access token
     access_token = create_access_token(
         identity=str(participant.id), expires_delta=expiry)
-    # return the user email and access token
-    return jsonify({'msg': 'Registered successfully','email':participant.email, 'mobile':participant.mobile, 'token':access_token})
+    # add result and return the result
+    result = {
+        'msg': 'Registered successfully',
+        'id': participant.id,
+        'email':participant.email, 
+        'mobile':participant.mobile, 
+        'token':access_token
+    }
+    return jsonify(result)
 
 
 # log in
@@ -85,8 +92,15 @@ def login():
     access_token = create_access_token(
         identity=str(participant.id), expires_delta=expiry)
 
-    # return the user email and access token
-    return jsonify({'msg':'Login successfully', 'email':participant.email, 'mobile':participant.mobile, 'token':access_token})
+    # return the user details
+    result = {
+        'msg': 'Login successfully',
+        'id': participant.id,
+        'email':participant.email, 
+        'mobile':participant.mobile, 
+        'token':access_token
+    }
+    return jsonify(result)
 
 
 # check personal details
@@ -119,7 +133,7 @@ def update_personal_details(participant_id):
 
     # if participant not exists, return error
     if not participant:
-        return abort(404, description='User not found')
+        return abort(404, description='Participant not found')
     # if user is admin, or user is trying to update their own details, continue to update
     elif user.admin or user.id == participant.id:
         # else, can continue to update fields
@@ -138,7 +152,7 @@ def update_personal_details(participant_id):
             db.session.commit()
         except exc.IntegrityError:
             return abort(400, description='Email or mobile already registered')
-        # # convert to json format
+        # convert to json format
         result = participant_schema.dump(participant)
         return jsonify(msg='Updated successfully', Updated=result)
     else:
@@ -159,7 +173,14 @@ def get_races_participant(participant_id):
         # query all registrations under the participant from the database
         registrations_list = Registration.query.filter_by(participant_id = participant_id).all()
         # convert to json format
-        result = registrations_schema.dump(registrations_list)
+        # result = registrations_schema.dump(registrations_list)
+        result = {
+            'participant': {
+                'first_name': participant.first_name,
+                'last_name': participant.last_name,
+            },
+            'registrations': registrations_schema.dump(registrations_list)
+        }
         # return the result
         return jsonify(result)
     # otherwise, the participant is not allowed to check other people's registrations

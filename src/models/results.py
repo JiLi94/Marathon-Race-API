@@ -16,4 +16,4 @@ class Result(db.Model):
     finish_time = db.Column(db.Time(), nullable=False)
     # average pace per km
     pace = db.Column(db.Time(), nullable=False)
-    # registration = db.relationship('Registration', backref = 'registration')
+    # registration = db.relationship('Registration', backref = 'result')
