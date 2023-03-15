@@ -25,7 +25,7 @@ def seed_db():
         first_name = 'Eliud',
         last_name = 'Kipchoge',
         email = 'test@test.com',
-        mobile = '1234567890',
+        mobile = '0412345678',
         password = bcrypt.generate_password_hash('Password12345678').decode('utf-8'),
         date_of_birth = datetime.strptime('1984-11-05', '%Y-%m-%d'),
         gender = 'male',

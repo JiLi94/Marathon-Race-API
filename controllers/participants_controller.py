@@ -51,11 +51,13 @@ def register_participant():
     access_token = create_access_token(
         identity=str(participant.id), expires_delta=expiry)
     # return the user email and access token
-    return jsonify({'User': participant.email, 'token': access_token})
+    return jsonify({'msg': 'Registered successfully','email':participant.email, 'mobile':participant.mobile, 'token':access_token})
 
 
 # log in
 @participants.route('/login', methods=['POST'])
+# password is required
+@validate_input(participant_schema, ['password'])
 def login():
     # get data from the request
     participant_fields = participant_schema.load(request.json)
@@ -68,10 +70,14 @@ def login():
         participant = Participant.query.filter_by(
             mobile=participant_fields['mobile']).first()
     else:
-        return abort(401, description="Please provide email address or mobile to login")
-    # if user is not found or password is incorrect
-    if not participant or not bcrypt.check_password_hash(participant.password, participant_fields['password']):
-        return abort(401, description="Incorrect login details")
+        return abort(400, description="Please provide email address or mobile to login")
+
+    # if user is not found
+    if not participant:
+        return abort(404, description="User not found")
+    # if password is incorrect
+    if not bcrypt.check_password_hash(participant.password, participant_fields['password']):
+        return abort(401, description="Incorrect password")
 
     # create a variable to store token expiration time
     expiry = timedelta(hours=6)
@@ -80,7 +86,7 @@ def login():
         identity=str(participant.id), expires_delta=expiry)
 
     # return the user email and access token
-    return jsonify({'User': participant.email, 'token': access_token})
+    return jsonify({'msg':'Login successfully', 'email':participant.email, 'mobile':participant.mobile, 'token':access_token})
 
 
 # check personal details

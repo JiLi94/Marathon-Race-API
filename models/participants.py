@@ -8,6 +8,7 @@ class Participant(db.Model):
     # add other columns
     first_name = db.Column(db.String(), nullable=False)
     last_name = db.Column(db.String(), nullable=False)
+    # email and mobile cannot be duplicated
     email = db.Column(db.String(), nullable=False, unique=True)
     mobile = db.Column(db.String(), nullable=False, unique=True)
     password = db.Column(db.String(), nullable=False)
