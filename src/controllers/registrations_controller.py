@@ -10,8 +10,10 @@ from controllers.participants_controller import is_admin
 from schemas.registration_schema import registration_schema, registrations_schema
 from dateutil.relativedelta import relativedelta
 from validator import validate_input, is_admin
+from parse import parse
 
 registrations = Blueprint('registrations', __name__, url_prefix='/registrations')
+
 
 # a route to view all registrations, should be admin only
 @registrations.route('/', methods=['GET'])
@@ -23,6 +25,7 @@ def get_registrations():
     result = registrations_schema.dump(registrations_list)
     # return the result
     return jsonify(result)
+
 
 # add registration
 @registrations.route('/', methods=['POST'])
@@ -43,17 +46,24 @@ def add_registration():
     # automatically assign age group based on participant's age on the race date
     age = relativedelta(race.date, participant.date_of_birth).years
     input['age_group_id'] = Age_group.query.filter(and_(age<=coalesce(Age_group.max_age, age), age>=Age_group.min_age)).first().id
-    # automatically assign gender group based on participant's gender
-    input['gender_group'] = 'male' if participant.gender == 'male' else 'female'
+    
     # add to the database
     registration = Registration(**input)
     db.session.add(registration)
     try:
         db.session.commit()
-    # if IntegrityError, means duplicate registration
-    except exc.IntegrityError:
-        return abort(400, description='Registration or bib number already exists')
+    # if IntegrityError, means duplicate registration or bib_number
+    except exc.IntegrityError as e:
+        # parse the error field, there are two scenarios: duplicated bib_number or participant
+        err_field = parse('duplicate key value violates unique constraint "{constraint}"\nDETAIL:  Key ({field})=({input}) already exists.\n', str(e.orig))["field"]
+        if err_field == 'bib_number, race_id':
+            err_msg = 'Bib number already exists under this race'
+        else:
+            err_msg = 'Participant already registered this race'
+        return abort(400, description = err_msg)
+    
     return jsonify(msg = 'Registration added successfully', registration = registration_schema.dump(registration))
+
 
 # a route to update existing registration
 @registrations.route('/<int:id>', methods=['PUT'])
@@ -82,10 +92,18 @@ def update_registration(id):
 
     try:
         db.session.commit()
-    except exc.IntegrityError:
-        return abort(400, description='Registration or bib number already exists')
+    # if IntegrityError, means duplicate registration or bib_number
+    except exc.IntegrityError as e:
+        # parse the error field, there are two scenarios: duplicated bib_number or participant
+        err_field = parse('duplicate key value violates unique constraint "{constraint}"\nDETAIL:  Key ({field})=({input}) already exists.\n', str(e.orig))["field"]
+        if err_field == 'bib_number, race_id':
+            err_msg = 'Bib number already exists under this race'
+        else:
+            err_msg = 'Participant already registered this race'
+        return abort(400, description = err_msg)
     
     return jsonify(msg = 'Updated successfully', registration = registration_schema.dump(registration))
+
 
 # a route to delete registration
 @registrations.route('/<int:id>', methods = ['DELETE'])

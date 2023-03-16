@@ -18,13 +18,14 @@ def get_race_results():
     args = request.args
     race_id = (int(args.get('race_id', False)) or None)
     age_group_id = (int(args.get('age_group_id', False)) or None)
-    gender_group = (args.get('gender_group', False) or None)
+    gender = (args.get('gender', False) or None)
     # query the database to check existing registrations with same race, age group and gender
-    sql = text('SELECT a.* FROM results AS a, registrations AS b\
+    sql = text('SELECT a.* FROM results AS a, registrations AS b, participants AS p\
                 WHERE a.registration_id = b.id \
+                AND p.id = b.participant_id\
                 AND b.race_id = COALESCE(:race_id, b.race_id) \
                 AND b.age_group_id = COALESCE(:age_group_id, b.age_group_id) \
-                AND b.gender_group = COALESCE(:gender_group, b.gender_group)'
+                AND p.gender = COALESCE(:gender, p.gender)'
             )
     # execute query and transfer results to a list of dictionaries
     sql_results = db.session.execute(
@@ -32,7 +33,7 @@ def get_race_results():
             # if some values are not passed, consider to query all registrations under that category
             'race_id': race_id,
             'age_group_id': age_group_id,
-            'gender_group': gender_group
+            'gender': gender
         }
     ).mappings().all()
     # extract the ids of the results
@@ -49,7 +50,7 @@ def get_race_results():
             'min_age': age_group.min_age if hasattr(age_group, 'min_age') else 'All',
             'max_age': age_group.max_age if hasattr(age_group, 'max_age') else 'All'
         },
-        'gender_group': gender_group or 'All',
+        'gender': gender or 'All',
         'results': results_schema.dump(results_list)
     }
     return jsonify(output)

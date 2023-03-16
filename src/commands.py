@@ -75,7 +75,7 @@ def seed_db():
         participant_id = participant1.id,
         race_id = race1.id,
         age_group_id = 3,
-        gender_group = participant1.gender,
+        # gender_group = participant1.gender,
         # registration date needs to be on or before race date
         registration_date = race1.date,
         bib_number = 'A1234'

@@ -10,7 +10,7 @@ class Registration(db.Model):
     race_id = db.Column(db.Integer(), db.ForeignKey('races.id'), nullable=False)
     age_group_id = db.Column(db.Integer(), db.ForeignKey('age_groups.id'), nullable=False)
     # add other columns
-    gender_group = db.Column(db.String(), nullable=False)
+    # gender_group = db.Column(db.String(), nullable=False)
     registration_date = db.Column(db.Date(), nullable=False)
     bib_number = db.Column(db.String(), nullable=False)
     # add a constraint: the combination of participant id and race id should be unique

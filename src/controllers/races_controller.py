@@ -3,7 +3,7 @@ from main import db
 from models.races import Race
 from controllers.participants_controller import is_admin
 from schemas.race_schema import race_schema, races_schema
-from sqlalchemy import text, exc
+from sqlalchemy import exc
 from validator import validate_input, is_admin
 from datetime import datetime
 

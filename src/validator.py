@@ -129,6 +129,7 @@ def validate_input(schema, required_fields=[]):
         return wrapper
     return decorator
 
+# define a decorator to check if the user is admin
 def is_admin(func):
     @wraps(func)
     @jwt_required()
