@@ -26,6 +26,32 @@ flask run
 
 ## Endpoints
 
+Below responses may apply to all routes that required JWT access token.
+
+- Error: missing authorization header
+
+```json
+{
+    "msg": "Missing Authorization Header"
+}
+```
+
+- Error: token expired
+
+```json
+{
+    "msg": "Token has expired"
+}
+```
+
+- Error: invalid token
+
+```json
+{
+    "msg": "Signature verification failed"
+}
+```
+
 ------------------------------------------------------------------------------------------
 
 ### Participants
@@ -37,15 +63,15 @@ flask run
 
 The user needs to send below data in a JSON format.
 
-| Name          | Data type | Format                                                  |
-| ------------- | --------- | ------------------------------------------------------------ |
-| first_name    | string    | must only contain alphabet letters                           |
-| last_name     | string    | must only contain alphabet letters                           |
-| email         | string    | must be a valid email address                                |
-| mobile        | string    | must be a valid Australian mobile number starts with 04      |
-| password      | string    | must be at least 8 letters long and have at least 1 uppercase letter |
-| date_of_birth | string    | must be in a format of yyyy-MM-dd                            |
-| gender        | string    | must be in ['male', 'female']                                |
+| Name          | Required | Data type | Description                                                          |
+|---------------|----------|-----------|----------------------------------------------------------------------|
+| first_name    | required | string    | must only contain alphabet letters                                   |
+| last_name     | required | string    | must only contain alphabet letters                                   |
+| email         | required | string    | must be a valid email address                                        |
+| mobile        | required | string    | must be a valid Australian mobile number starts with 04              |
+| password      | required | string    | must be at least 8 letters long and have at least 1 uppercase letter |
+| date_of_birth | required | string    | must be in a format of yyyy-MM-dd                                    |
+| gender        | required | string    | must be in ['male', 'female']                                        |
 
 #### Example payload
 
@@ -92,6 +118,7 @@ The user needs to send below data in a JSON format.
 ```json
 {
     "msg": "Registered successfully",
+    "id": 2,
     "email": "test2@test.com",
     "mobile": "0431754193",
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY3ODg3MTMzNywianRpIjoiYTViNjE"
@@ -107,11 +134,11 @@ The user needs to send below data in a JSON format.
 
 The user is required to login with either email or mobile. If both are provided, the API will look for existing user with email first, if none, then it will search with mobile.
 
-| Name          | Data type | Format                                                  |
-| ------------- | --------- | ------------------------------------------------------------ |
-| email         | string    | must be a valid email address                                |
-| mobile        | string    | must be a valid Australian mobile number starts with 04      |
-| password      | string    | must be at least 8 letters long and have at least 1 uppercase letter |
+| Name          | Required | Data type | Description                                                          |
+|---------------|----------|-----------|----------------------------------------------------------------------|
+| email         | optional | string    | must be a valid email address                                        |
+| mobile        | optional | string    | must be a valid Australian mobile number starts with 04              |
+| password      | required | string    | must be at least 8 letters long and have at least 1 uppercase letter |
 
 #### Example payload
 
@@ -167,10 +194,58 @@ The user is required to login with either email or mobile. If both are provided,
 ```json
 {
     "msg": "Login successfully",
+    "id" : 2,
     "email": "test2@test.com",
     "mobile": "0431754193",
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY3ODg3MTMzNywianRpIjoiYTViNjE"
 }
+```
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/participants/all</b></code> <code>(for admin to check all participants)</code></summary>
+
+#### Required data
+
+Admin user only. JWT authentication is implemented. When the user registers or logs in, they will get a bearer token. To access this route, the admin user needs to send the bearer token with the request. Non-admin user will be rejected.
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: invalid user (non-admin user)
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Success: return all participants' details
+
+```json
+[
+    {
+        "id": 1,
+        "first_name": "Eliud",
+        "last_name": "Kipchoge",
+        "email": "test@test.com",
+        "mobile": "0412345678",
+        "date_of_birth": "1984-11-05",
+        "gender": "male"
+    },
+    {
+        "id": 2,
+        "first_name": "Ji",
+        "last_name": "Li",
+        "email": "test10@test.com",
+        "mobile": "0431754134",
+        "date_of_birth": "2022-11-05",
+        "gender": "male"
+    }
+]
 ```
 
 </details>
@@ -180,37 +255,13 @@ The user is required to login with either email or mobile. If both are provided,
 
 #### Required data
 
-JWT authentication is implemented. When the user registers or logs in, they will get a bearer token. To access their personal details, the user needs to send the bearer token with the request. Non-admin users can only access their own personal details, while admin users can access all user's details.
+JWT access token required. Non-admin users can only access their own personal details, while admin users can access all user's details.
 
 #### Example payload
 
 None
 
 #### Responses
-
-- Error: missing authorization header
-
-```json
-{
-    "msg": "Missing Authorization Header"
-}
-```
-
-- Error: token expired
-
-```json
-{
-    "msg": "Token has expired"
-}
-```
-
-- Error: invalid token
-
-```json
-{
-    "msg": "Signature verification failed"
-}
-```
 
 - Error: invalid user (when a non-admin user is trying to access other user's details)
 
@@ -220,7 +271,7 @@ None
 <p>Invalid User</p>
 ```
 
-- Success: return customer's details
+- Success: return participant's details
 
 ```json
 {
@@ -231,6 +282,810 @@ None
     "mobile": "1234567890",
     "date_of_birth": "1984-11-05",
     "gender": "male"
+}
+```
+
+</details>
+
+<details>
+ <summary><code>PUT</code> <code><b>/participants/{int:participant_id}</b></code> <code>(for user to update personal details)</code></summary>
+
+#### Required data
+
+JWT access token required. Non-admin users can only update their own personal details, while admin users can update all user's details.
+
+To update any field of the personal details, the user needs to send the updated data in the body of the request in a JSON format.
+
+| Name          | Required | Data type | Description                                                          |
+|---------------|----------|-----------|----------------------------------------------------------------------|
+| first_name    | optional | string    | must only contain alphabet letters                                   |
+| last_name     | optional | string    | must only contain alphabet letters                                   |
+| email         | optional | string    | must be a valid email address                                        |
+| mobile        | optional | string    | must be a valid Australian mobile number starts with 04              |
+| password      | optional | string    | must be at least 8 letters long and have at least 1 uppercase letter |
+| date_of_birth | optional | string    | must be in a format of yyyy-MM-dd                                    |
+| gender        | optional | string    | must be in ['male', 'female']                                        |
+
+
+#### Example payload
+
+```json
+    {
+        "first_name": "Ji",
+        "email": "test10@test.com",
+    }
+```
+
+#### Responses
+
+- Error: user not found with specific id
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Participant not found</p>
+```
+
+- Error: invalid user (when a non-admin user is trying to update other user's details)
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Success: return successful message and updated details
+
+```json
+{
+    "msg": "Updated successfully",
+    "Updated": {
+        "id": 2,
+        "first_name": "Ji",
+        "last_name": "Li",
+        "email": "test10@test.com",
+        "mobile": "0431754134",
+        "date_of_birth": "2022-11-05",
+        "gender": "male"
+    }
+}
+```
+
+</details>
+
+<details>
+ <summary><code>DELETE</code> <code><b>/participants/{int:participant_id}</b></code> <code>(for admin user to delete a specific participant)</code></summary>
+
+#### Required data
+
+Admin user only. JWT access token required.
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: user not found with specific id
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Participant not found</p>
+```
+
+- Error: invalid user (when a non-admin user is trying to delete)
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: when there is registrations linked with the participant, need to delete the registrations first
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Please delete the registrations linked with this participant before deleting this participant</p>
+```
+
+- Success: return delete successful message
+
+```json
+{
+    "msg": "Participant deleted successfully",
+    "result": {
+        "id": 1,
+        "first_name": "Eliud",
+        "last_name": "Kipchoge",
+        "email": "test@test.com",
+        "mobile": "0412345678",
+        "date_of_birth": "1984-11-05",
+        "gender": "male"
+    }
+}
+```
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/participants/{int:participant_id}/registrations</b></code> <code>(for user to check their existing registrations)</code></summary>
+
+#### Required data
+
+JWT access token required. Non-admin users can only check their own registrations, while admin users can access all participants' registrations.
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: user not found with specific id
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Participant not found</p>
+```
+
+- Error: invalid user (when a non-admin user is trying to update other user's details)
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Success: return all registrations under the participant
+
+```json
+{
+    "participant": {
+        "first_name": "Eliud",
+        "last_name": "Kipchoge"
+    },
+    "registrations": [
+        {
+            "race": "Berlin Marathon",
+            "age_group": {
+                "min_age": 20,
+                "max_age": 39
+            },
+            "gender_group": "male",
+            "registration_date": "2022-09-25",
+            "bib_number": "A1234"
+        }
+    ]
+}
+```
+
+</details>
+
+------------------------------------------------------------------------------------------
+
+### Age groups
+
+<details>
+ <summary><code>GET</code> <code><b>/age_groups</b></code> <code>(to view all age groups)</code></summary>
+
+#### Required data
+
+None
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Success: returns all age groups, example response:
+
+```json
+[
+    {
+        "id": 1,
+        "min_age": 0,
+        "max_age": 17
+    },
+    {
+        "id": 2,
+        "min_age": 18,
+        "max_age": 19
+    }
+]
+```
+
+</details>
+
+------------------------------------------------------------------------------------------
+
+### Races
+
+<details>
+ <summary><code>GET</code> <code><b>/races</b></code> <code>(to view all races)</code></summary>
+
+#### Required data
+
+None
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Success: returns all races, example response:
+
+```json
+[
+    {
+        "id": 1,
+        "name": "Melbourne Marathon",
+        "distance": "2.13",
+        "date": "2022-09-25",
+        "start_time": "07:00:00",
+        "cut_off_time": "14:00:00",
+        "field_limit": 9000,
+        "start_line": "Batman Avenue (150m North of Rod Laver Arena)",
+        "finish_line": "Melbourne Cricket Ground (MCG)",
+        "fee": "160.01"
+    }
+]
+```
+
+</details>
+
+<details>
+ <summary><code>GET</code> <code><b>/races/{int:race_id}</b></code> <code>(to view a single race)</code></summary>
+
+#### Required data
+
+None
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Success: returns single race corresponding to the race_id
+
+```json
+[
+    {
+        "id": 1,
+        "name": "Melbourne Marathon",
+        "distance": "2.13",
+        "date": "2022-09-25",
+        "start_time": "07:00:00",
+        "cut_off_time": "14:00:00",
+        "field_limit": 9000,
+        "start_line": "Batman Avenue (150m North of Rod Laver Arena)",
+        "finish_line": "Melbourne Cricket Ground (MCG)",
+        "fee": "160.01"
+    }
+]
+```
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/races</b></code> <code>(to add a race, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required. Admin user only. Below is the required data.
+
+| Name         | Required | Data type | Description                                                |
+|--------------|----------|-----------|------------------------------------------------------------|
+| name         | required | string    | Name of the race                                           |
+| distance     | required | float     | must be a number larger than 0                             |
+| date         | required | string    | must be in a format of yyyy-MM-dd                          |
+| start_time   | required | string    | must be in a format of HH:MM:SS                            |
+| cut_off_time | required | string    | must be in a format of HH:MM:SS and larger than start_time |
+| field_limit  | required | int       | must be a int larger than 0                                |
+| start_line   | required | string    | start point of the race                                    |
+| finish_line  | required | string    | end point of the race                                      |
+| fee          | required | float     | must be a number larger than 0                             |
+
+#### Example payload
+
+```json
+{
+    "name": "Melbourne Marathon",
+    "distance": 21.1,
+    "date": "2022-09-25",
+    "start_time": "07:00:00",
+    "cut_off_time": "12:00:00",
+    "field_limit": 6000,
+    "start_line": "Batman Avenue (150m North of Rod Laver Arena)",
+    "finish_line": "Melbourne Cricket Ground (MCG)",
+    "fee": 160.01
+}
+```
+
+#### Responses
+
+- Error: required field missing
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Please provide finish_line, fee</p>
+```
+
+- Error: incorrect format of provided field, example:
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Cut off time cannot be earlier than start time</p>
+```
+
+- Error: race already exists. The combination of name and date must be unique.
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Race already exists!</p>
+```
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Success: returns successful message with race detail
+
+```json
+{
+    "msg": "Race added successfully",
+    "race": {
+        "id": 10,
+        "name": "Melbourne Marathon",
+        "distance": 21.1,
+        "date": "2022-09-25",
+        "start_time": "07:00:00",
+        "cut_off_time": "12:00:00",
+        "field_limit": 6000,
+        "start_line": "Batman Avenue (150m North of Rod Laver Arena)",
+        "finish_line": "Melbourne Cricket Ground (MCG)",
+        "fee": 160.01
+    }
+}
+```
+
+</details>
+
+<details>
+ <summary><code>PUT</code> <code><b>/races/{int:race_id}</b></code> <code>(to update a race, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required. Admin user only. User needs to send the updated field in the body.
+
+| Name         | Required | Data type | Description                                                |
+|--------------|----------|-----------|------------------------------------------------------------|
+| name         | optional | string    | Name of the race                                           |
+| distance     | optional | float     | must be a number larger than 0                             |
+| date         | optional | string    | must be in a format of yyyy-MM-dd                          |
+| start_time   | optional | string    | must be in a format of HH:MM:SS                            |
+| cut_off_time | optional | string    | must be in a format of HH:MM:SS and larger than start_time |
+| field_limit  | optional | int       | must be a int larger than 0                                |
+| start_line   | optional | string    | start point of the race                                    |
+| finish_line  | optional | string    | end point of the race                                      |
+| fee          | optional | float     | must be a number larger than 0                             |
+
+#### Example payload
+
+```json
+{
+    "name": "Melbourne Marathon",
+    "distance": 21.1,
+    "date": "2022-09-25",
+    "start_time": "07:00:00",
+    "cut_off_time": "12:00:00",
+    "field_limit": 6000,
+    "start_line": "Batman Avenue (150m North of Rod Laver Arena)",
+    "finish_line": "Melbourne Cricket Ground (MCG)",
+    "fee": 160.01
+}
+```
+
+#### Responses
+
+- Error: incorrect format of provided field, example:
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Cut off time cannot be earlier than start time</p>
+```
+
+- Error: race already exists. The combination of name and date must be unique.
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Race already exists!</p>
+```
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Success: returns update successful message with race detail
+
+```json
+{
+    "msg": "Updated successfully",
+    "race": {
+        "id": 10,
+        "name": "Melbourne Marathon",
+        "distance": 21.1,
+        "date": "2022-09-25",
+        "start_time": "07:00:00",
+        "cut_off_time": "12:00:00",
+        "field_limit": 6000,
+        "start_line": "Batman Avenue (150m North of Rod Laver Arena)",
+        "finish_line": "Melbourne Cricket Ground (MCG)",
+        "fee": 160.01
+    }
+}
+```
+
+</details>
+
+</details>
+
+<details>
+ <summary><code>DELETE</code> <code><b>/races/{int:race_id}</b></code> <code>(to delete a race, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required. Admin user only. 
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: race not found with specific id
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Race not found</p>
+```
+- Error:  when there are registrations linked with the race, need to delete the registrations first
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Please delete the registrations linked with this race before deleting this race</p>
+```
+
+- Success: returns delete successful message with race detail
+
+```json
+{
+    "msg": "Race deleted successfully",
+    "race": {
+        "id": 1,
+        "name": "Berlin Marathon",
+        "distance": "2.13",
+        "date": "2022-09-25",
+        "start_time": "07:00:00",
+        "cut_off_time": "09:00:00",
+        "field_limit": 9000,
+        "start_line": "Batman Avenue (150m North of Rod Laver Arena)",
+        "finish_line": "Melbourne Cricket Ground (MCG)",
+        "fee": "160.01"
+    }
+}
+```
+
+</details>
+
+------------------------------------------------------------------------------------------
+
+### Registrations
+
+<details>
+ <summary><code>GET</code> <code><b>/registrations</b></code> <code>(to view all registrations, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required. Admin user only.
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Success: returns all existing registrations
+
+```json
+[
+    {
+        "participant": {
+            "first_name": "Eliud",
+            "last_name": "Kipchoge"
+        },
+        "race": "Berlin Marathon",
+        "age_group": {
+            "min_age": 20,
+            "max_age": 39
+        },
+        "gender_group": "male",
+        "registration_date": "2022-09-25",
+        "bib_number": "A1234"
+    }
+]
+```
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/registrations</b></code> <code>(to add a registration, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required. Admin user only. User needs to input all required fields below. The age group will be determined by the program automatically based on participant's date_of_birth, so it shouldn't be passed here.
+
+| Name             | Required | Data type | Description                                                |
+|------------------|----------|-----------|------------------------------------------------------------|
+| participant_id   | required | int       | must be the id of an existing participant                  |
+| race_id          | required | int       | must be the id of an existing race                         |
+| registration_date| required | string    | must be in a format of yyyy-MM-dd                          |
+| bib_number       | required | string    | unique combination of alphabet letters and numbers for each registration|
+
+#### Example payload
+
+```json
+{
+    "participant_id": 1,
+    "race_id": 1,
+    "registration_date": "2022-09-25",
+    "bib_number": "A12345"
+}
+```
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: participant already registered
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Participant already registered this race</p>
+```
+
+- Error: bib number exists
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Bib number already exists under this race</p>
+```
+
+- Error: participant not found
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Participant not found</p>
+```
+
+- Error: race not found
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Race not found</p>
+```
+
+- Success: returns successful message and registration details
+
+```json
+{
+    "msg": "Registration added successfully",
+    "registration": {
+        "id": 8,
+        "participant": {
+            "first_name": "Ji",
+            "last_name": "Li",
+            "gender": "male"
+        },
+        "race": "Berlin Marathon",
+        "age_group": {
+            "min_age": 0,
+            "max_age": 17
+        },
+        "registration_date": "2022-09-25",
+        "bib_number": "A123456"
+    }
+}
+```
+
+</details>
+
+<details>
+ <summary><code>PUT</code> <code><b>/registrations/{int:registration_id}</b></code> <code>(to update a registration, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required. Admin user only. User can pass any updated fields in the body.
+
+| Name             | Required | Data type | Description                                                |
+|------------------|----------|-----------|------------------------------------------------------------|
+| participant_id   | optional | int       | must be the id of an existing participant                  |
+| race_id          | optional | int       | must be the id of an existing race                         |
+| registration_date| optional | string    | must be in a format of yyyy-MM-dd                          |
+| bib_number       | optional | string    | unique combination of alphabet letters and numbers for each registration|
+
+#### Example payload
+
+```json
+{
+    "participant_id": 1,
+    "race_id": 1,
+    "registration_date": "2022-09-25",
+    "bib_number": "A12345"
+}
+```
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: participant already registered
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Participant already registered this race</p>
+```
+
+- Error: bib number exists
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Bib number already exists under this race</p>
+```
+
+- Error: participant not found
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Participant not found</p>
+```
+
+- Error: race not found
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Race not found</p>
+```
+
+- Success: returns successful message and registration details
+
+```json
+{
+    "msg": "Updated successfully",
+    "registration": {
+        "id": 8,
+        "participant": {
+            "first_name": "Ji",
+            "last_name": "Li",
+            "gender": "male"
+        },
+        "race": "Berlin Marathon",
+        "age_group": {
+            "min_age": 0,
+            "max_age": 17
+        },
+        "registration_date": "2022-09-25",
+        "bib_number": "A12346"
+    }
+}
+```
+
+</details>
+
+<details>
+ <summary><code>DELETE</code> <code><b>/registrations/{int:registration_id}</b></code> <code>(to delete a registration, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required. Admin user only.
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: registration not found
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Registration not found</p>
+```
+
+- Error: when there is a result linked with the registration, need to delete the result first
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Please delete the result linked with this registration before deleting this registration</p>
+```
+
+- Success: returns successful message and registration details
+
+```json
+{
+    "msg": "Registration deleted successfully",
+    "result": {
+        "id": 1,
+        "participant": {
+            "first_name": "Eliud",
+            "last_name": "Kipchoge",
+            "gender": "male"
+        },
+        "race": "Berlin Marathon",
+        "age_group": {
+            "min_age": 20,
+            "max_age": 39
+        },
+        "registration_date": "2022-09-25",
+        "bib_number": "A1234"
+    }
 }
 ```
 
