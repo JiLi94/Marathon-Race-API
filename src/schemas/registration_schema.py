@@ -12,7 +12,7 @@ class RegistrationSchema(ma.Schema):
         # make sure output is ordered as the order in the fields
         ordered = True
     # only include first and last name of the participant
-    participant = fields.Nested('ParticipantSchema', only = ['first_name', 'last_name', 'gender'])
+    participant = fields.Nested('ParticipantSchema', only = ['first_name', 'last_name'])
     # only show the name of race when dump
     race = fields.Pluck('RaceSchema', 'name')
     # only show the value of age_group when dump

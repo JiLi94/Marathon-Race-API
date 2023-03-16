@@ -1090,3 +1090,274 @@ None
 ```
 
 </details>
+
+------------------------------------------------------------------------------------------
+
+### Results
+
+<details>
+ <summary><code>GET</code> <code><b>/results</b></code> <code>(to view results based on race, age group and gender)</code></summary>
+
+#### Required data
+
+Query parameters are utilised in this route. User can pass race_id, age_group_id and gender to view results based on these criteria. If any of these parameters are not passed, it will be considered to view all results under the category,
+
+| Name             | Required | Data type | Description                                                |
+|------------------|----------|-----------|------------------------------------------------------------|
+| race_id          | optional | int       | must be the id of an existing race                         |
+| age_group_id     | optional | int       | must be the id of an existing age_group                    |
+| gender           | optional | string    | must be in ['male', 'female']                              |
+
+For example, the query strings can be like: [/results/?race_id=1&age_group_id=1&gender=male](/results/?race_id=1&age_group_id=1&gender=male)
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: race/age_group not found
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Race not found</p>
+```
+
+- Success: returns all existing results in a ascending order of finish_time
+
+```json
+{
+    "race": "Berlin Marathon",
+    "age_group": {
+        "min_age": "All",
+        "max_age": "All"
+    },
+    "gender": "male",
+    "results": [
+        {
+            "place": 1,
+            "first_name": "Eliud",
+            "last_name": "Kipchoge",
+            "finished": true,
+            "start_at": "07:00:00",
+            "finish_at": "09:00:00",
+            "finish_time": "02:00:00",
+            "pace": "00:02:50"
+        },
+        {
+            "place": 2,
+            "first_name": "Ji",
+            "last_name": "Li",
+            "finished": true,
+            "start_at": "07:00:00",
+            "finish_at": "11:00:00",
+            "finish_time": "04:00:00",
+            "pace": "00:05:41"
+        }
+    ]
+}
+```
+
+</details>
+
+<details>
+ <summary><code>POST</code> <code><b>/results</b></code> <code>(to add a result, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required, and admin user only. Users are required to pass the below data in the request body. The finish time and pace will be calculated automatically by the program, so they are not required.
+
+| Name             | Required | Data type | Description                                                |
+|------------------|----------|-----------|------------------------------------------------------------|
+| registration_id  | required | int       | must be the id of an existing registration                 |
+| finished         | required | boolean   | must be either true or false                               |
+| start_at         | required | string    | must be in the format of '%H:%M:%S                         |
+| finish_at        | required | string    | must be in the format of '%H:%M:%S                         |
+
+#### Example payload
+
+```json
+{
+    "registration_id": 9,
+    "finished": true,
+    "start_at": "07:00:00",
+    "finish_at": "9:00:00"
+}
+```
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: registration not found
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Registration not found</p>
+```
+
+- Error: registration already has a result
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Result with same registration id already exists</p>
+```
+
+- Success: returns successful message and result details
+
+```json
+{
+    "description": "Added successfully",
+    "result": {
+        "participant": {
+            "first_name": "Eliud",
+            "last_name": "Kipchoge"
+        },
+        "id": 13,
+        "registration_id": 9,
+        "finished": true,
+        "start_at": "07:00:00",
+        "finish_at": "09:00:00",
+        "finish_time": "02:00:00",
+        "pace": "00:02:50"
+    }
+}
+```
+
+</details>
+
+<details>
+ <summary><code>PUT</code> <code><b>/results/{int:result_id}</b></code> <code>(to update a result, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required, and admin user only. Users can pass any updated fields in the request body.
+
+| Name             | Required | Data type | Description                                                |
+|------------------|----------|-----------|------------------------------------------------------------|
+| registration_id  | optional | int       | must be the id of an existing registration                 |
+| finished         | optional | boolean   | must be either true or false                               |
+| start_at         | optional | string    | must be in the format of '%H:%M:%S                         |
+| finish_at        | optional | string    | must be in the format of '%H:%M:%S                         |
+
+#### Example payload
+
+```json
+{
+    "registration_id": 9,
+    "finished": true,
+    "start_at": "07:00:00",
+    "finish_at": "9:00:00"
+}
+```
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: registration not found
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Registration not found</p>
+```
+
+- Error: registration already has a result
+
+```html
+<title>400 Bad Request</title>
+<h1>Bad Request</h1>
+<p>Result with same registration id already exists</p>
+```
+
+- Success: returns successful message and result details
+
+```json
+{
+    "msg": "Updated successfully",
+    "result": {
+        "participant": {
+            "first_name": "Eliud",
+            "last_name": "Kipchoge"
+        },
+        "id": 10,
+        "registration_id": 9,
+        "finished": true,
+        "start_at": "07:00:00",
+        "finish_at": "10:00:00",
+        "finish_time": "3:00:00",
+        "pace": "00:04:15"
+    }
+}
+```
+
+</details>
+
+
+<details>
+ <summary><code>DELETE</code> <code><b>/results/{int:result_id}</b></code> <code>(to delete a result, admin only)</code></summary>
+
+#### Required data
+
+JWT access token required, and admin user only.
+
+#### Example payload
+
+None
+
+#### Responses
+
+- Error: non-admin user
+
+```html
+<title>401 Unauthorized</title>
+<h1>Unauthorized</h1>
+<p>Invalid User</p>
+```
+
+- Error: result not found
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Result not found</p>
+```
+
+- Success: returns successful message and result details
+
+```json
+{
+    "msg": "Result deleted successfully",
+    "result": {
+        "participant": {
+            "first_name": "Eliud",
+            "last_name": "Kipchoge"
+        },
+        "id": 13,
+        "registration_id": 9,
+        "finished": true,
+        "start_at": "07:00:00",
+        "finish_at": "09:00:00",
+        "finish_time": "02:00:00",
+        "pace": "00:02:50"
+    }
+}
+```
+
+</details>
