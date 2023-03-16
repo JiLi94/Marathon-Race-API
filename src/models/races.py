@@ -17,8 +17,5 @@ class Race(db.Model):
     fee = db.Column(db.Numeric(10,2), nullable=False)
     # the combination of name and date should be unique
     constraint = db.UniqueConstraint(name, date)
-    registrations = db.relationship(
-        'Registration',
-        backref = 'race',
-    )
+    registrations = db.relationship('Registration',backref = 'race')
     
