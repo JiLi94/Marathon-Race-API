@@ -11,17 +11,6 @@ from validator import validate_input, is_admin
 
 participants = Blueprint('participants', __name__, url_prefix='/participants')
 
-@participants.route('/all', methods=['GET'])
-# admin only
-@is_admin
-def get_participants():
-    # query all participants from the database
-    participants_list = Participant.query.all()
-    # convert the data into a JSON format
-    result = participants_schema.dump(participants_list)
-    # return the data in JSON format
-    return jsonify(result)
-
 
 # register a new participant
 @participants.route('/register', methods=['POST'])
@@ -103,6 +92,19 @@ def login():
     return jsonify(result)
 
 
+# check all participants
+@participants.route('/all', methods=['GET'])
+# admin only
+@is_admin
+def get_participants():
+    # query all participants from the database
+    participants_list = Participant.query.all()
+    # convert the data into a JSON format
+    result = participants_schema.dump(participants_list)
+    # return the data in JSON format
+    return jsonify(result)
+
+
 # check personal details
 @participants.route('/<int:participant_id>', methods=['GET'])
 @jwt_required()
@@ -159,6 +161,22 @@ def update_personal_details(participant_id):
         return abort(401, 'Invalid User')
 
 
+# a route to delete a participant
+@participants.route('/<int:id>', methods=['DELETE'])
+@is_admin
+def delete_registration(id):
+    participant = Participant.query.get(id)
+    participant_serialized = participant_schema.dump(participant)
+    if participant:
+        try:
+            db.session.delete(participant)
+            db.session.commit()    
+            return jsonify(msg = 'Participant deleted successfully', result = participant_serialized)
+        except exc.IntegrityError:
+            return abort(400, description='Please delete the registrations linked with this participant before deleting this participant')
+    return abort(404, description = 'Participant not found')
+
+
 # a route to view races under one participant
 @participants.route('/<int:participant_id>/registrations', methods=['GET'])
 @jwt_required()
@@ -185,18 +203,3 @@ def get_races_participant(participant_id):
         return jsonify(result)
     # otherwise, the participant is not allowed to check other people's registrations
     return abort(401, description='Invalid User')
-
-# a route to delete a participant
-@participants.route('/<int:id>', methods=['DELETE'])
-@is_admin
-def delete_registration(id):
-    participant = Participant.query.get(id)
-    participant_serialized = participant_schema.dump(participant)
-    if participant:
-        try:
-            db.session.delete(participant)
-            db.session.commit()    
-            return jsonify(msg = 'Participant deleted successfully', result = participant_serialized)
-        except exc.IntegrityError:
-            return abort(400, description='Please delete the registrations linked with this participant before deleting this participant')
-    return abort(404, description = 'Participant not found')
