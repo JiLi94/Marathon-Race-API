@@ -93,7 +93,7 @@ def seed_db():
         finish_at = datetime.strptime('09:00:00', '%H:%M:%S'),
     )
     result1.finish_time = result1.finish_at - result1.start_at
-    result1.pace = result1.finish_time #timedelta(seconds = result1.finish_time.total_seconds()/race1.distance)
+    result1.pace = datetime.strptime('00:03:00', '%H:%M:%S')
     db.session.add(result1)
     db.session.commit()
 

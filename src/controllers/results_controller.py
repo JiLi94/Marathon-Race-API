@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 results = Blueprint('results', __name__, url_prefix='/results')
 
 # a route to view all results for a given race, age group and gender group
+
+
 @results.route('/', methods=['GET'])
 def get_race_results():
     args = request.args
@@ -29,14 +31,14 @@ def get_race_results():
     gender = (args.get('gender', False) or None)
     # query the database to check existing registrations with same race, age group and gender
     sql = text('SELECT first_name, last_name, res.*, \
-                ROW_NUMBER () OVER (ORDER BY res.finish_time ASC) AS row_num \
+                ROW_NUMBER () OVER (ORDER BY res.pace ASC) AS row_num \
                 FROM results AS res \
                 INNER JOIN registrations AS reg ON res.registration_id = reg.id \
                 INNER JOIN participants AS par ON par.id = reg.participant_id \
                 WHERE reg.race_id = COALESCE(:race_id, reg.race_id) \
                 AND reg.age_group_id = COALESCE(:age_group_id, reg.age_group_id) \
                 AND par.gender = COALESCE(:gender, par.gender)'
-            )
+               )
     # execute the query
     sql_results = db.session.execute(
         sql, {
@@ -82,15 +84,16 @@ def validate_results_schema(input):
         return abort(404, description='Registration not found')
     # finish time should be larger than start time
     if datetime.strptime(input['finish_at'], '%H:%M:%S') <= datetime.strptime(input['start_at'], '%H:%M:%S'):
-    # if input['finish_at'] <= input['start_at']:
         return abort(400, 'Finish time cannot be earlier than start time')
-        
+
     # calculate finish time automatically
-    delta = (datetime.strptime(input['finish_at'],'%H:%M:%S') - datetime.strptime(input['start_at'],'%H:%M:%S'))
+    delta = (datetime.strptime(
+        input['finish_at'], '%H:%M:%S') - datetime.strptime(input['start_at'], '%H:%M:%S'))
     input['finish_time'] = str(delta)
     # calculate pace: time used per kilometer
     race = Race.query.get(registration.race_id)
-    input['pace'] = (datetime(2000,1,1) + timedelta(seconds=delta.total_seconds()/float(race.distance))).time().strftime('%H:%M:%S')
+    input['pace'] = (datetime(2000, 1, 1) + timedelta(seconds=delta.total_seconds() /
+                     float(race.distance))).time().strftime('%H:%M:%S')
     return input
 
 
@@ -98,10 +101,27 @@ def validate_results_schema(input):
 @results.route('/', methods=['POST'])
 @is_admin
 # make sure inputs are in valid format
-@validate_input(result_schema, ['registration_id','finished','start_at','finish_at'])
+@validate_input(result_schema, ['registration_id', 'finished', 'start_at', 'finish_at'])
 def add_result():
-    # make sure inputs are meaningful
+    # get input
     input = validate_results_schema(result_schema.load(request.json))
+    registration = Registration.query.get(input['registration_id'])
+    if not registration:
+        return abort(404, description='Registration not found')
+    # finish time should be larger than start time
+    if datetime.strptime(input['finish_at'], '%H:%M:%S') <= datetime.strptime(input['start_at'], '%H:%M:%S'):
+        return abort(400, 'Finish time cannot be earlier than start time')
+
+    # calculate finish time automatically
+    delta = (datetime.strptime(
+        input['finish_at'], '%H:%M:%S') - datetime.strptime(input['start_at'], '%H:%M:%S'))
+    input['finish_time'] = str(delta)
+    # calculate pace: time used per kilometer
+    race = Race.query.get(registration.race_id)
+    input['pace'] = (datetime(2000, 1, 1) + timedelta(seconds=delta.total_seconds() /
+                     float(race.distance))).time().strftime('%H:%M:%S')
+
+    # add to database
     result = Result(**input)
     db.session.add(result)
     try:
@@ -109,8 +129,8 @@ def add_result():
     # if integrity err, means duplicated registration ids found
     except exc.IntegrityError:
         return abort(400, description='Result with same registration id already exists')
-    
-    return jsonify(description='Added successfully', result = result_schema.dump(result))
+
+    return jsonify(description='Added successfully', result=result_schema.dump(result))
 
 
 # a route to update existing result
@@ -127,27 +147,44 @@ def update_result(result_id):
             if getattr(result, key) is not None and getattr(result, key) != value:
                 setattr(result, key, value)
     else:
-        return abort(404, description = 'Result not found')
-    
-    # make sure the inputs are valid
+        return abort(404, description='Result not found')
+
+    # find registration
+    registration = Registration.query.get(result.registration_id)
+    if not registration:
+        return abort(404, description='Registration not found')
+
+    # finish time should be larger than start time
+    if datetime.strptime(result.finish_at, '%H:%M:%S') <= datetime.strptime(result.start_at, '%H:%M:%S'):
+        return abort(400, 'Finish time cannot be earlier than start time')
+
+    # calculate finish time automatically
+    delta = (datetime.strptime(result.finish_at, '%H:%M:%S') -
+             datetime.strptime(result.start_at, '%H:%M:%S'))
+    result.finish_time = str(delta)
+    # calculate pace: time used per kilometer
+    race = Race.query.get(registration.race_id)
+    result.pace = (datetime(2000, 1, 1) + timedelta(seconds=delta.total_seconds() /
+                   float(race.distance))).time().strftime('%H:%M:%S')
+
+    # update database
     try:
-        result = validate_results_schema(result_schema.dump(result))
         db.session.commit()
     # if IntegrityError, means duplicated registrations
     except exc.IntegrityError:
         return abort(400, description='Result with same registration id already exists')
-    return jsonify(msg = 'Updated successfully', result = result)
-    
+    return jsonify(msg='Updated successfully', result=result_schema.dump(result))
+
 
 # a route to delete an existing result
-@results.route('/<int:result_id>', methods = ['DELETE'])
+@results.route('/<int:result_id>', methods=['DELETE'])
 @is_admin
 def delete_result(result_id):
     result = Result.query.get(result_id)
     result_serialized = result_schema.dump(result)
     if result:
         db.session.delete(result)
-        db.session.commit()    
-        return jsonify(msg = 'Result deleted successfully', result = result_serialized)
+        db.session.commit()
+        return jsonify(msg='Result deleted successfully', result=result_serialized)
     # if result not exists
-    return abort(404, description = 'Result not found')
+    return abort(404, description='Result not found')

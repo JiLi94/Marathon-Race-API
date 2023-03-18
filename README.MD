@@ -283,6 +283,14 @@ None
 <p>Invalid User</p>
 ```
 
+- Error: participant not found with the specific id
+
+```html
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>Participant not found</p>
+```
+
 - Success: return participant's details
 
 ```json
@@ -1388,7 +1396,7 @@ None
 - [psycopg2](https://pypi.org/project/psycopg2/): For database connection between SQLAlchemy and PostgreSQL.
 - [phonenumbers](https://pypi.org/project/phonenumbers/): For phone number validations. ```parse()``` is the method to create a ```PhoneNumber``` object and `is_valid_number()` is used to validate whether the phone number is valid.
 - [password_strength](https://pypi.org/project/password-strength/): The requirement of password strength in this project is at least 8 letters long and at least 1 uppercase letter. This is implemented with the help of the method `PasswordPolicy.from_names()` in this package.
-- [email-validator](https://pypi.org/project/email-validator/): The method `validate_email` from this package has been used to validate the email format of user input.
+- [email-validator](https://pypi.org/project/email-validator/): The method `validate_email()` from this package has been used to validate the email format of user input.
 
 ## Describe your projects *models* in terms of the relationships they have with each other
 
@@ -1493,7 +1501,7 @@ The coding work began in this project stage, including setting up the environmen
 
 The final stage is to document all the endpoints, make a user manual of the API and answer all the questions from the assignment.
 
-![Trello project management](./docs/Trello project management.png)
+![Trello project management](./docs/trello.png)
 
 Please see the project in Trello: [Trello - Marathon Race API](https://trello.com/invite/b/5Xxb3pA0/ATTI7a9c360a905e20c5b1b3de84f0e8a22427836BF5/marathon-race-api)
 

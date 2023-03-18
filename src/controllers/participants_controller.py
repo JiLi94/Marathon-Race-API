@@ -111,9 +111,13 @@ def get_participants():
 def check_personal_details(participant_id):
     # access identity of current participant
     id = get_jwt_identity()
-    participant = Participant.query.get(id)
+    current_participant = Participant.query.get(id)
+    # get the queried participant
+    participant = Participant.query.get(participant_id)
+    if not participant:
+        return abort(404, description='Participant not found')
     # if user is trying to access their own details, or the user is admin, allow access
-    if int(id) == participant_id or participant.admin:
+    if int(id) == participant_id or current_participant.admin:
         result = participant_schema.dump(participant)
         return jsonify(result)
     # otherwise, the participant is not allowed to check other people's details
