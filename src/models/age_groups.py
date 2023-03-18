@@ -8,4 +8,4 @@ class Age_group(db.Model):
     # add other columns
     min_age = db.Column(db.Integer(), nullable=False)
     max_age = db.Column(db.Integer(), nullable=True)
-    registrations = db.relationship('Registration', backref = 'age_group',)
+    registrations = db.relationship('Registration', backref = 'age_group')

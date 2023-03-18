@@ -5,7 +5,7 @@ class Result(db.Model):
     __tablename__ = 'results'
     # add primary key
     id = db.Column(db.Integer(), primary_key=True)
-    # add foreign key
+    # add foreign key, unique=True because it's a one-to-one relationship
     registration_id = db.Column(db.Integer(), db.ForeignKey('registrations.id'), nullable=False, unique=True)
     # add other columns
     finished = db.Column(db.Boolean(), nullable=False)

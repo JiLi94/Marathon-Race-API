@@ -1,5 +1,6 @@
 from main import ma
 
+
 # create the participant scheme with Marshmallow
 class AgeGroupSchema(ma.Schema):
     class Meta:

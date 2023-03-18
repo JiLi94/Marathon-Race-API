@@ -3,11 +3,10 @@ from marshmallow.exceptions import ValidationError
 from email_validator import validate_email, EmailNotValidError
 from phonenumbers import parse, is_valid_number
 from password_strength import PasswordPolicy
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.participants import Participant
-import re
 
 class Validator():
 

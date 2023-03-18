@@ -1,8 +1,7 @@
 from main import ma
-from marshmallow import fields
+
 
 # create the participant scheme with Marshmallow
-
 class ParticipantSchema(ma.Schema):
     class Meta:
         # fields to output
