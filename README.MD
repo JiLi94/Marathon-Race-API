@@ -1,3 +1,13 @@
+## Problem to be solved and reasons why it needs solving
+
+Every year, thousands of long-distance running festivals take place around the world. As a marathon lover, currently, there is no good way for me to view all of the past running events' data in one place, so an API that stores all the data could be a valuable resource for the public.
+
+The API can provide historical data on previous races, such as participants' information, race information, and overall results based on selected race, age group, and gender. With all these data, this API can act as a tool for the users to analyse their performance compared with world-leading runners, and keep updated with running events happening every day.
+
+With some tweaks, this API can also provide live updates on the status of runners during a race. By cooperating with event organisers, the API can get real-time information about the events and participants, such as weather, runners' live locations, time used, and distance travelled. The audience can utilise the information to track their preferred runners, while coaches can also use it to analyse runners' performance and prepare future coaching plans.
+
+Overall, this API that collects data on long-distance running events could be a useful resource for anyone involved in the sport, including runners, coaches, event organisers and audiences.
+
 ## How to install and run the API
 
 Python3 is required for this project. Before getting into the database, the user needs to activate the virtual environment and install the required packages. Make sure you are in the path /src, and run below commands in terminal:
@@ -8,7 +18,7 @@ source .venv/bin/activate
 pip install requirement.txt
 ```
 
-This API runs on a database called 'marathon_race', so a database and user need to be created first. To create the database, activate PostgreSQL and run the below commands in PostgreSQL:
+This API runs on a database called 'marathon_race', so a database and user must be created first. To create the database, activate PostgreSQL and run the below commands in PostgreSQL:
 
 ```sql
 CREATE DATABASE marathon_race;
@@ -24,33 +34,35 @@ flask db seed
 flask run
 ```
 
+## Database system advantages and drawbacks
+
+The selected database system is PostgreSQL. The main reasons include:
+
+- A non-relational database is more commonly used to store data that are not convenient to be represented by two-dimensional tables, such as text, pictures, and reports. The structure of two-dimensional tables is closer to the real w world and easy to understand. Also, relational databases are easy to use with common SQL statements. In this API, the data, such as participants' information, race information, and results, are more suitable to be stored in two-dimensional tables, so a relational database system is selected in this case.  <sup>[1]</sup>
+
+- Among all of the relational database systems, PostgreSQL has been selected mainly because PostgreSQL is an open-source, accessible, and robust relational database management system. In addition, it has excellent documentation and community support, making it simple to learn and use.
+- PostgreSQL is ACID (Atomicity, Consistency, Isolation, and Durability) compliant, reducing the possibility of data redundancy and inconsistency. <sup>[2]</sup>
+
+- PostgreSQL provides excellent language support, including Python, the primary language used in this API.
+
+- The write-ahead logging standard makes PostgreSQL a stable database with less possibility of data being non-recoverable. 
+
+However, PostgreSQL can also have some drawbacks compared with other DBMSs, such as:
+
+- As a relational database system, PostgreSQL is not as flexible as non-relational databases. In addition, the predefined data structure makes the data storing more limited and data querying less efficient than others.
+
+- Because PostgreSQL is open source and not controlled by a single organisation, it is generally less user-friendly than other DBMSs, such as its graphical user interface.
+- The disadvantage that comes with ACID transactions is the slower speed of reading and writing operations. <sup>[3]</sup>
+
+## Key functionalities and benefits of an ORM
+
+- ORM provides mapping to relational databases, which allows developers to manipulate data, such as processing CRUD (create, read, update, and delete) operations in the database by writing codes in their familiar programming languages instead of raw SQL statements. 
+- The database access details are hidden under the hoods, making the codes cleaner and development faster.
+- Minimum code changes are required when the database changes, making switching between databases fast and easy. <sup>[4]</sup>
+- SQL injection is a kind of online attack, using SQL statements, to try to steal confidential information of a program from the backend. An ORM can effectively reduce the risk of SQL injection by significantly eliminating the use of raw SQL queries. <sup>[5]</sup>
+- ORM allows sanitising the data using own-defined statements and reduces data security and usability issues. 
+
 ## Endpoints
-
-Below responses may apply to all routes that required JWT access token.
-
-- Error: missing authorization header
-
-```json
-{
-    "msg": "Missing Authorization Header"
-}
-```
-
-- Error: token expired
-
-```json
-{
-    "msg": "Token has expired"
-}
-```
-
-- Error: invalid token
-
-```json
-{
-    "msg": "Signature verification failed"
-}
-```
 
 ------------------------------------------------------------------------------------------
 
@@ -61,14 +73,14 @@ Below responses may apply to all routes that required JWT access token.
 
 #### Required data
 
-The user needs to send below data in a JSON format.
+The user needs to send the below data in JSON format.
 
 | Name          | Required | Data type | Description                                                          |
 |---------------|----------|-----------|----------------------------------------------------------------------|
 | first_name    | required | string    | must only contain alphabet letters                                   |
 | last_name     | required | string    | must only contain alphabet letters                                   |
 | email         | required | string    | must be a valid email address                                        |
-| mobile        | required | string    | must be a valid Australian mobile number starts with 04              |
+| mobile        | required | string    | must be a valid Australian mobile number starting with 04              |
 | password      | required | string    | must be at least 8 letters long and have at least 1 uppercase letter |
 | date_of_birth | required | string    | must be in a format of yyyy-MM-dd                                    |
 | gender        | required | string    | must be in ['male', 'female']                                        |
@@ -134,11 +146,11 @@ The user needs to send below data in a JSON format.
 
 The user is required to login with either email or mobile. If both are provided, the API will look for existing user with email first, if none, then it will search with mobile.
 
-| Name          | Required | Data type | Description                                                          |
-|---------------|----------|-----------|----------------------------------------------------------------------|
-| email         | optional | string    | must be a valid email address                                        |
-| mobile        | optional | string    | must be a valid Australian mobile number starts with 04              |
-| password      | required | string    | must be at least 8 letters long and have at least 1 uppercase letter |
+| Name     | Required | Data type | Description                                                  |
+| -------- | -------- | --------- | ------------------------------------------------------------ |
+| email    | optional | string    | must be a valid email address                                |
+| mobile   | optional | string    | must be a valid Australian mobile number starting with 04    |
+| password | required | string    | must be at least 8 letters long and have at least 1 uppercase letter |
 
 #### Example payload
 
@@ -296,15 +308,15 @@ JWT access token required. Non-admin users can only update their own personal de
 
 To update any field of the personal details, the user needs to send the updated data in the body of the request in a JSON format.
 
-| Name          | Required | Data type | Description                                                          |
-|---------------|----------|-----------|----------------------------------------------------------------------|
-| first_name    | optional | string    | must only contain alphabet letters                                   |
-| last_name     | optional | string    | must only contain alphabet letters                                   |
-| email         | optional | string    | must be a valid email address                                        |
-| mobile        | optional | string    | must be a valid Australian mobile number starts with 04              |
+| Name          | Required | Data type | Description                                                  |
+| ------------- | -------- | --------- | ------------------------------------------------------------ |
+| first_name    | optional | string    | must only contain alphabet letters                           |
+| last_name     | optional | string    | must only contain alphabet letters                           |
+| email         | optional | string    | must be a valid email address                                |
+| mobile        | optional | string    | must be a valid Australian mobile number starting with 04    |
 | password      | optional | string    | must be at least 8 letters long and have at least 1 uppercase letter |
-| date_of_birth | optional | string    | must be in a format of yyyy-MM-dd                                    |
-| gender        | optional | string    | must be in ['male', 'female']                                        |
+| date_of_birth | optional | string    | must be in a format of yyyy-MM-dd                            |
+| gender        | optional | string    | must be in ['male', 'female']                                |
 
 
 #### Example payload
@@ -857,7 +869,7 @@ None
 
 #### Required data
 
-JWT access token required. Admin user only. User needs to input all required fields below. The age group will be determined by the program automatically based on participant's date_of_birth, so it shouldn't be passed here.
+JWT access token required. Admin user only. User needs to input all required fields below. The program will automatically determine the age group based on participant's date_of_birth, so it shouldn't be passed here.
 
 | Name             | Required | Data type | Description                                                |
 |------------------|----------|-----------|------------------------------------------------------------|
@@ -1361,3 +1373,139 @@ None
 ```
 
 </details>
+
+## ERD
+
+![ERD](./docs/ERD.png)
+
+## Detail any third party services that your *app* will use
+
+- [Flask](https://flask.palletsprojects.com/en/2.2.x/): As the framework to develop RESTful API. It provides methods to define routes, handle HTTP requests and responses, and manage application configurations.
+- [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/en/3.0.x/): Makes SQLAlchemy available for Flask. SQLAlchemy is an ORM that enables developers to process CRUD operations to the database without writing raw SQL statements.
+- [Flask-Bcrypt](https://flask-bcrypt.readthedocs.io/en/1.0.1/): A Flask extension that provides bcrypt hashing utilities for flask applications. In this project, the password of the participants has been hashed using method ```generate_password_hash()```, and ```check_password_hash()``` is used to check if the login details are correct.
+- [Flask-JWT-Extended](https://flask-jwt-extended.readthedocs.io/en/stable/): For authentication of the API. For example, ```create_access_token()```generates JSON Web Tokens. ```jwt_required()``` acts as a decorator to the routes which require login, and  ```get_jwt_identity()``` to get the identity of a JWT.
+- [Flask-Marshallow](https://flask-marshmallow.readthedocs.io/en/latest/): A Flask extension to allow object deserialisations and serialisations, so the result can be output as JSON format.
+- [psycopg2](https://pypi.org/project/psycopg2/): For database connection between SQLAlchemy and PostgreSQL.
+- [phonenumbers](https://pypi.org/project/phonenumbers/): For phone number validations. ```parse()``` is the method to create a ```PhoneNumber``` object and `is_valid_number()` is used to validate whether the phone number is valid.
+- [password_strength](https://pypi.org/project/password-strength/): The requirement of password strength in this project is at least 8 letters long and at least 1 uppercase letter. This is implemented with the help of the method `PasswordPolicy.from_names()` in this package.
+- [email-validator](https://pypi.org/project/email-validator/): The method `validate_email` from this package has been used to validate the email format of user input.
+
+## Describe your projects *models* in terms of the relationships they have with each other
+
+#### Participants to Registrations
+
+The relationship between participants and registrations is a one-to-many relationship. To achieve this relationship, there should be a foreign key 'participant_id' in the registrations table:
+
+```python
+# participant_id as a foreign key in the registration table
+participant_id = db.Column(db.Integer(), db.ForeignKey('participants.id'), nullable=False)
+```
+
+Also, to establish a bidirectional relationship, a ```db.relationship``` is declared in the participants model:
+
+```python
+registrations = db.relationship('Registration', backref = 'participant')
+```
+
+#### Races to Registrations
+
+Similar to above, the relationship between races and registrations is also one-to-many. So a foreign key of 'race_id' is added in the registration table:
+
+```python
+# add race_id as foreign key in registration table
+race_id = db.Column(db.Integer(), db.ForeignKey('races.id'), nullable=False)
+```
+
+And a ```db.relationship``` is declared in the races model:
+
+```python
+registrations = db.relationship('Registration',backref = 'race')
+```
+
+#### Age_groups to Registrations
+
+Also similar to above, it's a one-to-many relationship, and 'age_group_id' is added as a foreign key in the registrations table.
+
+```python
+# add age_group_id as foreign key in the registration table
+age_group_id = db.Column(db.Integer(), db.ForeignKey('age_groups.id'), nullable=False)
+```
+
+And the relationship is declared in the age_groups model as below.
+
+```python
+registrations = db.relationship('Registration', backref = 'age_group')
+```
+
+#### Registrations to Results
+
+It's a one-to-one relationship between registrations and results. To declare this relationship, a 'registration_id' has been added as a foerign key in the results table. ```unique = True``` is added because one registration can only correspond to one result.
+
+```python
+# add registration_id as a foreign key in the result table
+registration_id = db.Column(db.Integer(), db.ForeignKey('registrations.id'), nullable=False, unique=True)
+```
+
+And to make sure it's a one-to-one relationship, the below codes are added to the registrations model:
+
+```python
+  result = db.relationship(
+      'Result',
+      backref = 'registration',
+      # make sure it's one-to-one relationship
+      uselist = False
+  )
+```
+
+In this case, the statement `uselist = False` tells SQLAlchemy to load the connection as a scalar rather than a list, indicating this is a one-to-one relationship instead of one-to-many.
+
+## Discuss the database relations to be implemented in your application
+
+The tables include:
+
+1. Participants: contains the participants who have registered in the application. Gender and date of birth are required, because it will help query the race results based on different genders and age groups, which is a popular demand by the users in marathon races.
+2. Age_groups: contains the min and max age of each age group. This mainly helps the query of race results based on age groups.
+3. Races: contains the details of each race, such as name, date, location, and distance. 
+4. Registrations: contains the registration details corresponding to each participant and race. 
+5. Results: the result of each registration.
+
+The relations between each table:
+
+1. Participants to Races: many-to-many relationship. One participant can register for multiple races, and one race can have up to thousands of participants, so a new table is required in this case, which is the registration table.
+2. Participants to Registrations: one-to-many relationship. One participant can sign up for none, one, or multiple races during different dates, so this is a one-to-many relationship.
+3. Age_groups to Registrations: one-to-many relationship. One registration can only be linked with one age group, but one age group can have many registrations. 
+4. Races to Registrations: one-to-many relationship. Similar to above, there can be many registrations in a single race, and one registration is only linked to one race.
+5. Registrations to Result: one-to-one relationship. They are exclusive to each other. These two tables are not combined because the result table will be updated after the race has begun and registration has stopped. By separating them, updating the result table will be easier and faster, since it's a smaller table. The separation also makes it more quickly when querying for different data, for example, when the user only asks for the details of registrations. 
+
+## Describe the way tasks are allocated and tracked in your project
+
+The project management is mainly divided into 3 parts:
+
+#### Planning & Design
+
+In this section, the idea of the API has been developed, the ERD is finished, and most of the API endpoints are defined.
+
+#### Implementation & Testing
+
+The coding work began in this project stage, including setting up the environment, initialising the database, and implementing routes. The manual testing tasks were conducted together with the development process to ensure all endpoints are working correctly as expected.
+
+#### Documentation
+
+The final stage is to document all the endpoints, make a user manual of the API and answer all the questions from the assignment.
+
+![Trello project management](./docs/Trello project management.png)
+
+Please see the project in Trello: [Trello - Marathon Race API](https://trello.com/invite/b/5Xxb3pA0/ATTI7a9c360a905e20c5b1b3de84f0e8a22427836BF5/marathon-race-api)
+
+## References
+
+1. MongoDB. (n.d.). *Relational vs. Non-Relational Databases*. [online] Available at: https://www.mongodb.com/compare/relational-vs-non-relational-databases.
+
+2. Anon, (n.d.). *PostgreSQL Transaction*. [online] Available at: https://www.postgresqltutorial.com/postgresql-tutorial/postgresql-transaction/#:~:text=A%20PostgreSQL%20transaction%20is%20atomic.
+3. www.keboola.com. (n.d.). *What are the ACID properties of transactions, and why do they matter in data engineering?* [online] Available at: https://www.keboola.com/blog/acid-transactions#:~:text=Shortcomings%20of%20ACID%20transactions&text=Database%20systems%20that%20rely%20on.
+
+4. www.fullstackpython.com. (n.d.). *Object-relational Mappers (ORMs)*. [online] Available at: https://www.fullstackpython.com/object-relational-mappers-orms.html.
+
+5. GlobalDots. (2021). *8 best practices to prevent SQL injection attacks*. [online] Available at: https://www.globaldots.com/resources/blog/8-best-practices-to-prevent-sql-injection-attacks/.
+
+   ‌
