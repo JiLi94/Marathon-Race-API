@@ -12,9 +12,8 @@ from datetime import datetime, timedelta
 
 results = Blueprint('results', __name__, url_prefix='/results')
 
+
 # a route to view all results for a given race, age group and gender group
-
-
 @results.route('/', methods=['GET'])
 def get_race_results():
     args = request.args
@@ -66,7 +65,10 @@ def get_race_results():
 
     # add race, age group and gender into the result
     output = {
-        'race': race.name if hasattr(race, 'name') else 'All',
+        'race': {
+            'name': race.name if hasattr(race, 'name') else 'All',
+            'distance': race.distance if hasattr(race, 'name') else 'All'
+        },
         'age_group': {
             'min_age': age_group.min_age if hasattr(age_group, 'min_age') else 'All',
             'max_age': age_group.max_age if hasattr(age_group, 'max_age') else 'All'
@@ -104,7 +106,7 @@ def validate_results_schema(input):
 @validate_input(result_schema, ['registration_id', 'finished', 'start_at', 'finish_at'])
 def add_result():
     # get input
-    input = validate_results_schema(result_schema.load(request.json))
+    input = result_schema.load(request.json)
     registration = Registration.query.get(input['registration_id'])
     if not registration:
         return abort(404, description='Registration not found')

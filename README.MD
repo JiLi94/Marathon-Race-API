@@ -1148,7 +1148,10 @@ None
 
 ```json
 {
-    "race": "Berlin Marathon",
+    "race": {
+        "name": "Berlin Marathon",
+        "distance": "42.20"
+    },
     "age_group": {
         "min_age": "All",
         "max_age": "All"
