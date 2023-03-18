@@ -15,7 +15,7 @@ Python3 is required for this project. Before getting into the database, the user
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install requirement.txt
+pip install -r requirement.txt
 ```
 
 This API runs on a database called 'marathon_race', so a database and user must be created first. To create the database, activate PostgreSQL and run the below commands in PostgreSQL:
